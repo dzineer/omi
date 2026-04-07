@@ -63,6 +63,7 @@ from routers import (
 from utils.other.timeout import TimeoutMiddleware
 from utils.observability import log_langsmith_status
 from utils.subscription import validate_stripe_price_ids
+from utils.http_client import close_all_clients
 
 # Log LangSmith tracing status at startup
 log_langsmith_status()
@@ -141,6 +142,11 @@ methods_timeout = {
 }
 
 app.add_middleware(TimeoutMiddleware, methods_timeout=methods_timeout)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_all_clients()
 
 
 modal_app = App(

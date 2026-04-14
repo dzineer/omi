@@ -32,8 +32,8 @@ mod services;
 
 use auth::{firebase_auth_extension, FirebaseAuth};
 use config::Config;
-use routes::{action_items_routes, advice_routes, agent_routes, apps_routes, auth_routes, chat_routes, chat_sessions_routes, conversations_routes, crisp_routes, daily_score_routes, focus_sessions_routes, folder_routes, goals_routes, health_routes, knowledge_graph_routes, llm_usage_routes, memories_routes, messages_routes, people_routes, personas_routes, screen_activity_routes, staged_tasks_routes, stats_routes, updates_routes, users_routes, webhook_routes};
-use services::{FirestoreService, IntegrationService, RedisService};
+use routes::{action_items_routes, advice_routes, agent_routes, apps_routes, auth_routes, chat_routes, chat_sessions_routes, conversations_routes, crisp_routes, daily_score_routes, focus_sessions_routes, folder_routes, goals_routes, health_routes, knowledge_graph_routes, llm_usage_routes, memories_routes, memory_routes, messages_routes, people_routes, personas_routes, screen_activity_routes, staged_tasks_routes, stats_routes, updates_routes, users_routes, webhook_routes};
+use services::{FirestoreService, IntegrationService, MemoryService, RedisService};
 
 /// Application state shared across handlers
 #[derive(Clone)]
@@ -41,6 +41,7 @@ pub struct AppState {
     pub firestore: Arc<FirestoreService>,
     pub integrations: Arc<IntegrationService>,
     pub redis: Option<Arc<RedisService>>,
+    pub memory: Arc<MemoryService>,
     pub config: Arc<Config>,
     pub crisp_session_cache: routes::crisp::SessionCache,
 }
@@ -159,11 +160,16 @@ async fn main() {
         None
     };
 
+    // Initialize Eidetic Memory service (local knowledge graph)
+    let memory_service = Arc::new(MemoryService::new());
+    tracing::info!("Eidetic Memory initialized (graph: ~/.omi/memory/graph.json)");
+
     // Create app state
     let state = AppState {
         firestore,
         integrations,
         redis,
+        memory: memory_service.clone(),
         config: Arc::new(config.clone()),
         crisp_session_cache: routes::crisp::new_session_cache(),
     };
@@ -206,9 +212,13 @@ async fn main() {
         .merge(screen_activity_routes())
         .with_state(state);
 
-    // Merge both (now both are Router<()>), then add layers
+    // Build memory router (separate state: Arc<MemoryService>)
+    let memory_router = memory_routes().with_state(memory_service);
+
+    // Merge all routers, then add layers
     let app = main_router
         .merge(auth_router)
+        .merge(memory_router)
         .layer(firebase_auth_extension(firebase_auth))
         .layer(cors)
         .layer(TraceLayer::new_for_http());

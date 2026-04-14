@@ -68,6 +68,13 @@ pub struct ChatContextResponse {
     pub citation_sources: Vec<CitationSource>,
 }
 
+/// Request to save a conversation turn to eidetic memory
+#[derive(Debug, Deserialize)]
+pub struct SaveChatMemoryRequest {
+    pub user_message: String,
+    pub assistant_message: String,
+}
+
 /// Request for initial message generation
 #[derive(Debug, Deserialize)]
 pub struct InitialMessageRequest {
@@ -271,8 +278,19 @@ async fn get_chat_context(
 
     if !requires_context {
         tracing::info!("Question does not require context");
-        // Still return memories for personalization
-        let memories = get_user_memories(&state.firestore, &user.uid).await;
+        // Still return memories for personalization (Firestore + Eidetic)
+        let mut memories = get_user_memories(&state.firestore, &user.uid).await;
+        if let Ok(eidetic_hits) = state.memory.query(question, 5) {
+            for hit in eidetic_hits {
+                if !hit.payload.trim().is_empty() {
+                    memories.push(MemorySummary {
+                        id: format!("eidetic-{}", hit.id),
+                        content: hit.payload,
+                        category: format!("eidetic:{}", hit.kind),
+                    });
+                }
+            }
+        }
         let context_string = format_memories_context(&memories);
 
         return Ok(Json(ChatContextResponse {
@@ -296,8 +314,22 @@ async fn get_chat_context(
         date_range.as_ref(),
     ).await;
 
-    // Step 4: Fetch user memories
-    let memories = get_user_memories(&state.firestore, &user.uid).await;
+    // Step 4: Fetch user memories (Firestore + Eidetic local graph)
+    let mut memories = get_user_memories(&state.firestore, &user.uid).await;
+
+    // Augment with eidetic memory recall (local knowledge graph)
+    if let Ok(eidetic_hits) = state.memory.query(question, 10) {
+        for hit in eidetic_hits {
+            if !hit.payload.trim().is_empty() {
+                memories.push(MemorySummary {
+                    id: format!("eidetic-{}", hit.id),
+                    content: hit.payload,
+                    category: format!("eidetic:{}", hit.kind),
+                });
+            }
+        }
+        tracing::info!("Eidetic recall added {} memories", memories.len());
+    }
 
     // Step 5: Build context string for prompt (including conversation history and app context)
     let (base_context, citation_sources) = build_context_string(&conversations, &memories, &request.timezone);
@@ -825,9 +857,41 @@ async fn get_basic_context(
 // ROUTER
 // ============================================================================
 
+/// POST /v2/chat/save-memory - Save a conversation turn to eidetic memory
+async fn save_chat_memory(
+    State(state): State<AppState>,
+    _user: AuthUser,
+    Json(request): Json<SaveChatMemoryRequest>,
+) -> Json<serde_json::Value> {
+    let text = format!(
+        "### USER\n{}\n\n### ASSISTANT\n{}\n",
+        request.user_message, request.assistant_message
+    );
+
+    let memory = state.memory.clone();
+    // Fire-and-forget: don't block the response
+    tokio::spawn(async move {
+        match memory.save_conversation(&text, Some("omi-chat")) {
+            Ok(result) => {
+                tracing::info!(
+                    "Eidetic auto-save: {} memories stored in {} rooms",
+                    result.stored,
+                    result.rooms.len()
+                );
+            }
+            Err(e) => {
+                tracing::warn!("Eidetic auto-save failed: {}", e);
+            }
+        }
+    });
+
+    Json(serde_json::json!({"ok": true}))
+}
+
 pub fn chat_routes() -> Router<AppState> {
     Router::new()
         .route("/v2/chat-context", post(get_chat_context))
         .route("/v2/chat/initial-message", post(generate_initial_message))
         .route("/v2/chat/generate-title", post(generate_session_title))
+        .route("/v2/chat/save-memory", post(save_chat_memory))
 }

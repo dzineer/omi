@@ -54,4 +54,9 @@ urlencoding = "2.1"
 # Redis for conversation visibility
 redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }
 
+# Eidetic Memory (local knowledge graph with hybrid search)
+eidetic-core = { path = "../../../../../eidetic_memory/crates/eidetic-core" }
+fastembed = "5"
+dirs = "5"
+
 # Note: Using Firestore REST API directly instead of gcloud-sdk for compatibility

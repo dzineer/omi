@@ -1,0 +1,20 @@
+---
+id: VOICE001.3
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.3
+  §status:§verifying-failed
+  §owner:§ai
+  §goal:(§build §WhisperONNXEngine §in-process §fallback)
+  §files:[Desktop/Sources/Voice/WhisperONNXEngine.swift]
+  §result:(§created §WhisperONNXEngine §class
+    §with:[§transcribe]
+    §uses §onnx-runtime §already §in §Package.swift
+    §loads §whisper-base.onnx)
+  §risk:["decoder returns nil — tokenizer not implemented"
+         "inference pipeline has placeholder audio feature extraction"
+         "gibber originally claimed actor but code is final class"]
+  §todo:[§implement §tokenizer §for §onnx §whisper §decoder
+         §implement §real §audio-feature §extraction
+         §verify §end-to-end §transcription §works])

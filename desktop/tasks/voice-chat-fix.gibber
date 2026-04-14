@@ -1,0 +1,12 @@
+---
+id: VOICE-FIX-001
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE-FIX-001
+  §status:§wip
+  §owner:§ai
+  §goal:(§fix §onVoiceTranscript §callback §placement §in §handleTranscriptSegment)
+  §files:[Desktop/Sources/AppState.swift]
+  §notes:"onVoiceTranscript is only in the no-words fallback path. But LocalSTTService creates segments WITH words (one word = full text). So the callback never fires. Move it to the end of handleTranscriptSegment after newSegments are processed, using the full accumulated text."
+  §depends:[VOICE001.8])

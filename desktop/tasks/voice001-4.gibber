@@ -1,0 +1,13 @@
+---
+id: VOICE001.4
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.4
+  §status:§done
+  §owner:§ai
+  §goal:(§port §hallucination-filter §from §rust-voice-assist §to §swift)
+  §files:[Desktop/Sources/Voice/HallucinationFilter.swift]
+  §result:(§created §HallucinationFilter §enum
+    §with §isHallucination §static §func
+    §filters:[thank-you thanks-for-watching subscribe okay bye yeah]))

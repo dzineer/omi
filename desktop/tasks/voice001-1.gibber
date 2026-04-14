@@ -1,0 +1,14 @@
+---
+id: VOICE001.1
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.1
+  §status:§done
+  §owner:§ai
+  §goal:(§build §LocalSTTService §sole §transcription §engine)
+  §files:[Desktop/Sources/Voice/LocalSTTService.swift]
+  §result:(§created §LocalSTTService §actor
+    §with:[§startListening §stopListening §sendAudio §onTranscript]
+    §routes §arm64→§mlx-whisper §x86→§onnx-whisper
+    §accumulates §pcm16 §buffer §encodes §wav §on §vad-speech-end))

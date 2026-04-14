@@ -1,0 +1,34 @@
+---
+id: EIDETIC001
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:EIDETIC001
+  §status:§done
+  §owner:§ai
+  §title:"Direct Eidetic Memory integration into Omi desktop backend"
+  §goal:(§integrate §eidetic-core §crate §into §Backend-Rust
+    §with:[§memory-service §axum-routes §auto-save §auto-recall])
+
+  §done:[
+    (§task §id:EIDETIC001.1 §status:§done
+      §result:(§added §eidetic-core §path-dep + §fastembed-5 + §dirs-5))
+    (§task §id:EIDETIC001.2 §status:§done
+      §result:(§created §MemoryService §with:[§save §save_conversation §query §status §embed_text]))
+    (§task §id:EIDETIC001.3 §status:§done
+      §result:(§created §memory_routes §endpoints:[POST:/api/memory/save POST:/api/memory/query GET:/api/memory/status]))
+    (§task §id:EIDETIC001.4 §status:§done
+      §result:(§added §memory §to §AppState + §memory_router §merge §in §main))
+    (§task §id:EIDETIC001.5 §status:§done
+      §result:(§added §POST:/v2/chat/save-memory §endpoint
+        §fire-and-forget §tokio::spawn §saves §conversation §to §eidetic))
+    (§task §id:EIDETIC001.6 §status:§done
+      §result:(§augmented §get_chat_context §with §eidetic §recall
+        §queries §local §graph §alongside §firestore §memories
+        §both §context-required §and §no-context §paths))]
+
+  §result:(§eidetic-core §fully §integrated
+    §auto-recall: §every §chat-context §query §searches §local §graph
+    §auto-save: §POST §endpoint §for §swift §to §call §after §each §turn
+    §endpoints:[POST:/api/memory/save POST:/api/memory/query GET:/api/memory/status POST:/v2/chat/save-memory]
+    §compiles:§clean §zero-errors))

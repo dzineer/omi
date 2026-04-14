@@ -1,0 +1,18 @@
+---
+id: VOICE001.7
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.7
+  §status:§done
+  §owner:§ai
+  §goal:(§build §VoiceConversationManager §orchestrate §voice §loop)
+  §files:[Desktop/Sources/Voice/VoiceConversationManager.swift
+          Desktop/Sources/ViewModelContainer.swift]
+  §result:(§created §VoiceConversationManager §class §MainActor
+    §with:[§start §stop §toggleMute §interrupt]
+    §states:[§idle §listening §transcribing §thinking §speaking]
+    §flow: §listen → §handleTranscript → §sendMessage → §waitForAIResponse → §speakResponse → §listen
+    §wired §into §ViewModelContainer §with §chatProvider §reference
+    §pauses §mic §during §tts §to §prevent §echo
+    §compiles:§clean §zero-errors))

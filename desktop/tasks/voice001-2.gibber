@@ -1,0 +1,14 @@
+---
+id: VOICE001.2
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.2
+  §status:§done
+  §owner:§ai
+  §goal:(§build §MLXWhisperServer §manage §python-subprocess)
+  §files:[Desktop/Sources/Voice/MLXWhisperServer.swift]
+  §result:(§created §MLXWhisperServer §actor
+    §with:[§start §stop §healthCheck §transcribe]
+    §spawns §python3 §fastapi §on §localhost-8787
+    §auto-start §health-monitor §auto-restart §model-download §graceful-shutdown))

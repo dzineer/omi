@@ -1,0 +1,20 @@
+---
+id: VOICE001.8
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.8
+  §status:§done
+  §owner:§ai
+  §goal:(§modify §AppState §wire §local-stt §into §audio §pipeline)
+  §files:[Desktop/Sources/AppState.swift]
+  §result:(§wired §LocalSTTService §into §AppState
+    §added §localSTTService §property
+    §added §useLocalSTT §flag §returns §true
+    §replaced §TranscriptionService §instantiation §with §LocalSTTService
+    §added §local-stt §path §in §audioMixer §callback
+    §VAD §speechEnded → §localSTTService.speechEnded
+    §transcript → §TranscriptSegment §bridge → §handleTranscriptSegment
+    §updated §clearTranscriptionState §to §shutdown §localSTTService
+    §removed §DEEPGRAM_API_KEY §warning
+    §compiles:§clean §zero-errors))

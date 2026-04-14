@@ -1,0 +1,125 @@
+---
+id: VOICE001
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001
+  §status:§queued
+  §owner:§pair
+  §title:"Full bidirectional voice conversation with AI"
+  §goal:(§build §voice-loop
+    §user-speaks → §local-stt → §claude-chat → §local-tts → §user-hears
+    §all-local §zero-api-keys §by-default
+    §optional §openai-cloud §for §both §stt §and §tts)
+  §depends:[]
+
+  §todo:[
+    ; === HEARING (STT) ===
+    (§task §id:VOICE001.1
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §LocalSTTService
+        §sole §transcription §engine
+        §apple-silicon: §mlx-whisper §via §python-subprocess
+        §intel-or-fallback: §onnx-whisper §in-process
+        §optional: §openai-whisper-api §via §same §openai-compat §endpoint)
+      §files:[Desktop/Sources/Voice/LocalSTTService.swift]
+      §notes:"Swift actor. Receives PCM16 16kHz from existing AudioCaptureService. VAD speech-end triggers batch transcription. Routes to MLX (arm64) or ONNX (x86/fallback). Hallucination filter before output.")
+
+    (§task §id:VOICE001.2
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §MLXWhisperServer
+        §manage §python-subprocess §for §mlx-whisper
+        §with:[§auto-start §health-check §auto-restart §model-download §graceful-shutdown])
+      §files:[Desktop/Sources/Voice/MLXWhisperServer.swift
+              voice-assist-server/server.py]
+      §notes:"Copy server.py from rust-voice-assist. Spawn as subprocess. Monitor /health. Auto-download whisper-large-v3-turbo on first run with progress callback. Only on Apple Silicon.")
+
+    (§task §id:VOICE001.3
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §WhisperONNXEngine
+        §in-process §onnx §inference §for §intel §and §fallback)
+      §files:[Desktop/Sources/Voice/WhisperONNXEngine.swift]
+      §notes:"Load whisper-base ONNX model via OnnxRuntimeSwift already in Package.swift. ~140MB model. ~3-5s inference. Auto-selected when not arm64 or when Python unavailable.")
+
+    (§task §id:VOICE001.4
+      §status:§queued
+      §owner:§ai
+      §goal:(§port §hallucination-filter §from §rust-voice-assist §to §swift)
+      §files:[Desktop/Sources/Voice/HallucinationFilter.swift]
+      §notes:"Silence artifacts: thank you, thanks for watching, subscribe, okay, bye, yeah. Apply before feeding conversation pipeline.")
+
+    ; === SPEAKING (TTS) ===
+    (§task §id:VOICE001.5
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §LocalTTSService
+        §kokoro §via §onnx-runtime §in-process
+        §text-in §audio-out §to §speakers)
+      §files:[Desktop/Sources/Voice/LocalTTSService.swift]
+      §notes:"Load kokoro-v1.0.onnx (~80MB quantized) + voices-v1.0.bin via same OnnxRuntimeSwift. Convert text to phonemes. Run ONNX inference. Output PCM audio. Play via AVAudioPlayer or AudioQueue. Voice selection in settings.")
+
+    (§task §id:VOICE001.6
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §TTSAudioPlayer
+        §play §generated §pcm §audio §to §system §speakers
+        §with:[§queue §interrupt §volume-control])
+      §files:[Desktop/Sources/Voice/TTSAudioPlayer.swift]
+      §notes:"Receives PCM from LocalTTSService. Plays via AVAudioEngine. Supports: queue multiple utterances, interrupt current speech on new input, volume control. Pauses mic capture during playback to prevent echo.")
+
+    ; === VOICE LOOP (orchestration) ===
+    (§task §id:VOICE001.7
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §VoiceConversationManager
+        §orchestrate §full §loop:
+        §listen → §transcribe → §query-claude → §speak-response
+        §with:[§push-to-talk §wake-word §auto-mode])
+      §files:[Desktop/Sources/Voice/VoiceConversationManager.swift]
+      §notes:"Three activation modes: (1) push-to-talk via hotkey, (2) wake word detection, (3) auto-mode (always listening, VAD triggers). On transcript: send to ClaudeCodeBridge.query(). On response: feed to LocalTTSService. Pause STT during TTS playback. Resume listening after speech ends.")
+
+    (§task §id:VOICE001.8
+      §status:§queued
+      §owner:§ai
+      §goal:(§modify §AppState §and §ChatProvider
+        §add §voice-mode §toggle
+        §wire §voice-loop §into §existing §chat §pipeline)
+      §files:[Desktop/Sources/AppState.swift
+              Desktop/Sources/Providers/ChatProvider.swift]
+      §notes:"Add voiceModeEnabled toggle. When on: VoiceConversationManager handles the loop. Transcribed text appears as user message in chat UI. AI response appears as assistant message AND gets spoken. Chat history preserved same as text chat.")
+
+    (§task §id:VOICE001.9
+      §status:§queued
+      §owner:§ai
+      §goal:(§add §voice-settings-ui
+        §in §SettingsPage
+        §stt-engine §tts-voice §activation-mode §cloud-keys)
+      §files:[Desktop/Sources/MainWindow/Pages/SettingsPage.swift]
+      §notes:"Settings > Voice: STT engine status (MLX/ONNX/downloading). TTS voice picker (kokoro voices). Activation mode (push-to-talk/wake-word/auto). Optional: OpenAI API key for cloud Whisper STT and OpenAI TTS. Model download progress bars.")]
+
+  §budget:(§time<5d §lat<3s-round-trip §acc>95%)
+  §tests:[
+    (§test §name:"voice-stt-basic"
+      §check:(§speak → §transcript §appears §in §chat))
+    (§test §name:"voice-tts-basic"
+      §check:(§ai-response → §audio §plays §from §speakers))
+    (§test §name:"voice-loop-full"
+      §check:(§speak §question → §ai §answers §aloud))
+    (§test §name:"voice-echo-cancel"
+      §check:(§during §tts-playback → §mic §paused → §no §feedback-loop))
+    (§test §name:"voice-interrupt"
+      §check:(§user-speaks §during §tts → §tts §stops → §new §stt §starts))
+    (§test §name:"voice-intel-fallback"
+      §check:(§on §x86_64 → §onnx §stt + §onnx §tts §both §work))
+    (§test §name:"voice-chat-history"
+      §check:(§voice §messages → §saved §in §chat §session → §visible §in §ui))]
+
+  §risk:[
+    "Round-trip latency: STT (~1-2s) + Claude API (~2-3s) + TTS (~0.5s) = ~4-6s total"
+    "Echo cancellation: must pause mic during TTS playback"
+    "First run downloads: STT model (~1.6GB) + TTS model (~80MB)"
+    "Kokoro ONNX phoneme conversion needs testing on non-English"
+    "No speaker diarization — single speaker for voice mode"])

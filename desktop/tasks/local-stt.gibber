@@ -1,0 +1,100 @@
+---
+id: STT001
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:STT001
+  §status:§queued
+  §owner:§pair
+  §title:"Fully local STT — no cloud dependencies"
+  §goal:(§integrate §mlx-whisper §into §audio-capture §pipeline
+    §with §onnx-whisper §cpu-fallback §for §intel
+    §local-first §zero §api-keys §by-default
+    §optional §openai-whisper-api §via §same §openai-compat §endpoint
+    §reusing:[§audio-capture §vad-gate §conversation-pipeline])
+  §depends:[]
+  §files:[
+    Desktop/Sources/LocalSTTService.swift
+    Desktop/Sources/LocalSTTServer.swift
+    Desktop/Sources/WhisperONNXFallback.swift
+    Desktop/Sources/AppState.swift
+    voice-assist-server/server.py]
+
+  §todo:[
+    (§task §id:STT001.1
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §LocalSTTService
+        §as §sole §transcription §engine
+        §interface:[§startListening §stopListening §sendAudio §onTranscript])
+      §notes:"Swift actor. Replaces TranscriptionService entirely. Receives PCM16 16kHz audio from existing pipeline. Accumulates buffer. VAD speech-end triggers transcription. Routes to MLX Whisper (Apple Silicon) or ONNX Whisper (Intel).")
+
+    (§task §id:STT001.2
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §LocalSTTServer
+        §manage §python-subprocess §lifecycle
+        §with:[§auto-start §health-check §auto-restart §graceful-shutdown §model-download-progress])
+      §notes:"Spawns voice-assist-server/server.py. Monitors /health every 30s. Auto-starts on first transcription. Kills on app quit. Manages venv + 1.6GB model download with progress callback to UI. Only used on Apple Silicon.")
+
+    (§task §id:STT001.3
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §WhisperONNXFallback
+        §for §intel-macs §without §metal-gpu
+        §using §onnx-runtime §already §in §project)
+      §notes:"Load whisper-base ONNX model (~140MB) via OnnxRuntimeSwift already in Package.swift. Same interface as MLX path. Slower (~3-5s) but works on any Mac. Auto-selected when ProcessInfo says not arm64.")
+
+    (§task §id:STT001.4
+      §status:§queued
+      §owner:§ai
+      §goal:(§integrate §hallucination-filter
+        §from §rust-voice-assist
+        §ported §to §swift)
+      §notes:"Port is_hallucination() from Rust. Remove Whisper silence artifacts before feeding conversation pipeline.")
+
+    (§task §id:STT001.5
+      §status:§queued
+      §owner:§ai
+      §goal:(§modify §AppState
+        §remove §deepgram §entirely
+        §replace §with §local-stt §as §only §engine)
+      §notes:"Remove DEEPGRAM_API_KEY checks. Remove TranscriptionService instantiation. LocalSTTService is the sole engine. startTranscription() creates LocalSTTService. handleTranscriptSegment unchanged.")
+
+    (§task §id:STT001.6
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §batch-transcribe §path
+        §vad-gate → §wav-encode → §transcribe → §speaker-segment → §conversation-pipeline)
+      §notes:"VAD fires on speech-end. LocalSTTService encodes buffer as 16kHz mono WAV. Apple Silicon: POST to localhost:8787. Intel: run ONNX inference directly. Parse text, create SpeakerSegment, feed handleTranscriptSegment.")
+
+    (§task §id:STT001.7
+      §status:§queued
+      §owner:§ai
+      §goal:(§add §settings-ui
+        §show §model-status §server-health §download-progress
+        §no §engine-toggle — §always §local)
+      §notes:"Settings > Transcription shows: model name, status (downloading/ready/running), inference backend (MLX/ONNX/OpenAI Cloud), avg latency. Download progress bar on first run. Default: local. Optional: enter OpenAI API key to use cloud Whisper — same endpoint format, just different URL + auth header.")]
+
+  §budget:(§time<3d §lat<3s §acc>95%)
+  §tests:[
+    (§test §name:"stt-basic"
+      §check:(§record §5s §speech → §transcript §non-empty))
+    (§test §name:"stt-hallucination"
+      §check:(§record §silence → §transcript §empty))
+    (§test §name:"stt-pipeline"
+      §check:(§transcript → §handleTranscriptSegment → §conversation §saved))
+    (§test §name:"stt-apple-silicon"
+      §check:(§on §arm64 → §mlx-whisper §used))
+    (§test §name:"stt-intel-fallback"
+      §check:(§on §x86_64 → §onnx-whisper §used))
+    (§test §name:"server-lifecycle"
+      §check:(§start §app → §server §auto-starts → §quit §app → §server §killed))
+    (§test §name:"first-run-download"
+      §check:(§no §model → §download §with §progress → §model §cached))]
+
+  §risk:[
+    "First run downloads ~1.6GB model (MLX) or ~140MB (ONNX) — need progress UI"
+    "Batch mode adds ~1-2s latency on M-series, ~3-5s on Intel — acceptable"
+    "No speaker diarization in local mode — single speaker assumed for MVP"
+    "Python venv setup on first run may fail if Python 3.10+ not installed — need fallback to ONNX"])

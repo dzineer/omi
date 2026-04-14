@@ -1,0 +1,14 @@
+---
+id: VOICE001.6
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.6
+  §status:§done
+  §owner:§ai
+  §goal:(§build §TTSAudioPlayer §play §pcm §to §speakers)
+  §files:[Desktop/Sources/Voice/TTSAudioPlayer.swift]
+  §result:(§created §TTSAudioPlayer §class
+    §with:[§play §stop §isPlaying §volume §queue]
+    §uses §AVAudioEngine + §AVAudioPlayerNode
+    §supports §queue §interrupt §volume-control))

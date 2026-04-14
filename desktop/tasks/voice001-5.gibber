@@ -1,0 +1,14 @@
+---
+id: VOICE001.5
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE001.5
+  §status:§done
+  §owner:§ai
+  §goal:(§build §LocalTTSService §kokoro §via §onnx-runtime)
+  §files:[Desktop/Sources/Voice/LocalTTSService.swift]
+  §result:(§created §LocalTTSService §actor
+    §with:[§speak §stop §isSpeaking §onSpeechStarted §onSpeechFinished]
+    §loads §kokoro-v1.0.onnx §quantized §80MB
+    §text→§phonemes→§onnx-inference→§pcm-audio→§TTSAudioPlayer))

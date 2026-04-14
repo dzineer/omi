@@ -16,7 +16,7 @@ struct DesktopHomeView: View {
     @StateObject private var viewModelContainer = ViewModelContainer()
     @ObservedObject private var authState = AuthState.shared
     @State private var selectedIndex: Int = {
-        if OMIApp.launchMode == .rewind { return SidebarNavItem.rewind.rawValue }
+        if VibeAIApp.launchMode == .rewind { return SidebarNavItem.rewind.rawValue }
         let tier = UserDefaults.standard.integer(forKey: "currentTierLevel")
         return SidebarNavItem.dashboard.rawValue
     }()
@@ -94,6 +94,9 @@ struct DesktopHomeView: View {
                             log("DesktopHomeView: Showing mainContent (signed in and onboarded)")
                             // Check all permissions on launch
                             appState.checkAllPermissions()
+
+                            // Wire voice manager to AppState for transcript forwarding
+                            viewModelContainer.voiceManager.connectToAppState(appState)
 
                             // For existing users who haven't indexed files yet, run a background scan
                             if !UserDefaults.standard.bool(forKey: "hasCompletedFileIndexing") {
@@ -244,23 +247,23 @@ struct DesktopHomeView: View {
 
                             Text(viewModelContainer.initStatusMessage)
                                 .scaledFont(size: 14, weight: .medium)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
 
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .tint(OmiColors.purplePrimary.opacity(0.6))
+                                .tint(VibeAIColors.purplePrimary.opacity(0.6))
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(OmiColors.backgroundPrimary)
+                        .background(VibeAIColors.backgroundPrimary)
                         .transition(.opacity.animation(.easeOut(duration: 0.3)))
                     }
                 }
             }
         }
-        .background(OmiColors.backgroundPrimary)
+        .background(VibeAIColors.backgroundPrimary)
         .frame(minWidth: 900, minHeight: 600)
         .preferredColorScheme(.dark)
-        .tint(OmiColors.purplePrimary)
+        .tint(VibeAIColors.purplePrimary)
         .onAppear {
             log("DesktopHomeView: View appeared - isSignedIn=\(authState.isSignedIn), hasCompletedOnboarding=\(appState.hasCompletedOnboarding)")
             // Force dark appearance and disable minSize computation on NSHostingView.
@@ -271,7 +274,7 @@ struct DesktopHomeView: View {
             // The window's min size is enforced at the AppKit level instead.
             DispatchQueue.main.async {
                 for window in NSApp.windows {
-                    if window.title.hasPrefix("Omi") {
+                    if window.title.hasPrefix("Omi") || window.title.hasPrefix("Vibe") {
                         window.appearance = NSAppearance(named: .darkAqua)
                         window.minSize = NSSize(width: 900, height: 600)
                         // Remove .minSize from hosting view's sizingOptions.
@@ -338,7 +341,7 @@ struct DesktopHomeView: View {
 
     /// Whether to hide the sidebar (rewind mode)
     private var hideSidebar: Bool {
-        OMIApp.launchMode == .rewind
+        VibeAIApp.launchMode == .rewind
     }
 
     /// Update store auto-refresh based on which page is visible
@@ -353,7 +356,7 @@ struct DesktopHomeView: View {
         UserDefaults.standard.set(Double(0), forKey: key)
         // Delay slightly so the window is fully visible
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            guard let window = NSApp.windows.first(where: { $0.title.hasPrefix("Omi") && $0.isVisible }) else { return }
+            guard let window = NSApp.windows.first(where: { ($0.title.hasPrefix("Omi") || $0.title.hasPrefix("Vibe")) && $0.isVisible }) else { return }
             var frame = window.frame
             frame.size.width = saved
             window.setFrame(frame, display: true)
@@ -406,10 +409,10 @@ struct DesktopHomeView: View {
             ZStack {
                 // Content container background
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(OmiColors.backgroundSecondary.opacity(0.4))
+                    .fill(VibeAIColors.backgroundSecondary.opacity(0.4))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(OmiColors.backgroundTertiary.opacity(0.3), lineWidth: 1)
+                            .stroke(VibeAIColors.backgroundTertiary.opacity(0.3), lineWidth: 1)
                     )
                     .shadow(color: .black.opacity(0.05), radius: 20, x: 0, y: 4)
 
@@ -527,7 +530,7 @@ private struct PageContentView: View {
             case 1:
                 DashboardPage(viewModel: viewModelContainer.dashboardViewModel, appState: appState, selectedIndex: $selectedTabIndex)
             case 2:
-                ChatPage(appProvider: viewModelContainer.appProvider, chatProvider: viewModelContainer.chatProvider)
+                ChatPage(appProvider: viewModelContainer.appProvider, chatProvider: viewModelContainer.chatProvider, voiceManager: viewModelContainer.voiceManager)
             case 3:
                 MemoriesPage(viewModel: viewModelContainer.memoriesViewModel)
             case 4:

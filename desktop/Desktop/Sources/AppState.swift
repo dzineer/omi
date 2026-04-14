@@ -120,9 +120,9 @@ class AppState: ObservableObject {
         return hasCompletedOnboarding && !hasNotificationPermission
     }
 
-    /// Open notification preferences in System Settings (directly to Omi's settings)
+    /// Open notification preferences in System Settings (directly to Vibe AI's settings)
     func openNotificationPreferences() {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.omi.computer-macos"
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.vibeaiglobal.vibeai"
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications?id=\(bundleId)") {
             NSWorkspace.shared.open(url)
         }
@@ -136,9 +136,20 @@ class AppState: ObservableObject {
     // Transcription services
     private var audioCaptureService: AudioCaptureService?
     private var transcriptionService: TranscriptionService?
+    private var localSTTService: LocalSTTService?
     private var systemAudioCaptureService: Any?  // SystemAudioCaptureService (macOS 14.4+)
     private var audioMixer: AudioMixer?
     private var vadGateService: VADGateService?
+
+    /// Use local STT (MLX Whisper / ONNX) instead of Deepgram
+    private var useLocalSTT: Bool {
+        // Always use local STT — no cloud dependency
+        true
+    }
+
+    /// Callback for voice conversation mode — called with each finalized transcript segment text.
+    /// Set by VoiceConversationManager to receive transcripts from the STT pipeline.
+    var onVoiceTranscript: ((String) -> Void)?
 
     // Batch transcription mode
     private var useBatchTranscription: Bool = false
@@ -425,9 +436,9 @@ class AppState: ObservableObject {
 
         // Log final state of important keys
         if getenv("DEEPGRAM_API_KEY") != nil {
-            log("DEEPGRAM_API_KEY is set")
+            log("DEEPGRAM_API_KEY is set (not used — local STT active)")
         } else {
-            log("WARNING: DEEPGRAM_API_KEY is NOT set")
+            log("Local STT active — no DEEPGRAM_API_KEY needed")
         }
     }
 
@@ -1030,7 +1041,7 @@ class AppState: ObservableObject {
 
     /// Reset accessibility permission (requires terminal command)
     nonisolated func resetAccessibilityPermissionDirect(shouldRestart: Bool = false) -> Bool {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.omi.computer-macos"
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.vibeaiglobal.vibeai"
         log("Resetting accessibility permission for \(bundleId) via tccutil...")
 
         let process = Process()
@@ -1136,13 +1147,52 @@ class AppState: ObservableObject {
             log("Transcription: Custom vocabulary: \(vocabulary.joined(separator: ", "))")
 
             // Determine transcription mode
-            useBatchTranscription = AssistantSettings.shared.batchTranscriptionEnabled && effectiveSource == .microphone
-
-            if !useBatchTranscription {
-                // Streaming mode: initialize WebSocket transcription service
-                transcriptionService = try TranscriptionService(language: effectiveLanguage, vocabulary: vocabulary)
+            if useLocalSTT {
+                // Local STT: always batch (accumulate audio, transcribe on VAD speech-end)
+                useBatchTranscription = true
+                let stt = LocalSTTService(language: effectiveLanguage)
+                localSTTService = stt
+                Task {
+                    await stt.configure(
+                        onTranscript: { [weak self] text in
+                            Task { @MainActor in
+                                guard let self = self, !text.isEmpty else { return }
+                                // Convert plain text to TranscriptSegment for the existing pipeline
+                                let segment = TranscriptionService.TranscriptSegment(
+                                    text: text,
+                                    isFinal: true,
+                                    speechFinal: true,
+                                    confidence: 0.95,
+                                    words: [TranscriptionService.TranscriptSegment.Word(
+                                        word: text, start: 0, end: 1,
+                                        confidence: 0.95, speaker: 0, punctuatedWord: text
+                                    )],
+                                    channelIndex: 0
+                                )
+                                self.handleTranscriptSegment(segment)
+                            }
+                        },
+                        onError: { error in
+                            Task { @MainActor in
+                                logError("Local STT error (non-fatal, continuing)", error: error)
+                                // Don't stop transcription on transient STT errors —
+                                // the server may not be ready yet or had a temporary failure.
+                                // Audio capture continues and next VAD chunk will retry.
+                            }
+                        }
+                    )
+                    await stt.startListening()
+                }
+                log("Transcription: Using local STT (MLX Whisper / ONNX)")
             } else {
-                log("Transcription: Batch mode enabled — skipping WebSocket")
+                useBatchTranscription = AssistantSettings.shared.batchTranscriptionEnabled && effectiveSource == .microphone
+
+                if !useBatchTranscription {
+                    // Streaming mode: initialize WebSocket transcription service
+                    transcriptionService = try TranscriptionService(language: effectiveLanguage, vocabulary: vocabulary)
+                } else {
+                    log("Transcription: Batch mode enabled — skipping WebSocket")
+                }
             }
 
             // Set conversation source based on audio source
@@ -1181,8 +1231,8 @@ class AppState: ObservableObject {
                 }
 
                 // Initialize system audio capture if supported (macOS 14.4+)
-                // Can be disabled via: defaults write com.omi.desktop-dev disableSystemAudioCapture -bool true
-                //                  or: defaults write com.omi.computer-macos disableSystemAudioCapture -bool true
+                // Can be disabled via: defaults write com.vibeaiglobal.vibeai-dev disableSystemAudioCapture -bool true
+                //                  or: defaults write com.vibeaiglobal.vibeai disableSystemAudioCapture -bool true
                 let systemAudioDisabled = UserDefaults.standard.bool(forKey: "disableSystemAudioCapture")
                 if systemAudioDisabled {
                     log("Transcription: System audio capture DISABLED by user preference (disableSystemAudioCapture)")
@@ -1308,10 +1358,54 @@ class AppState: ObservableObject {
 
         // Start the audio mixer - it will send stereo audio to transcription service
         // Branch on batch vs streaming mode
+        // Capture useLocalSTT as a local constant — computed property is @MainActor
+        // and can't be safely accessed from the audio callback thread
+        var mixerCallCount = 0
         audioMixer.start { [weak self] stereoData in
             guard let self = self else { return }
-            if self.useBatchTranscription {
-                // Batch mode: accumulate audio in VAD gate, transcribe on silence
+            mixerCallCount += 1
+            if mixerCallCount == 1 || mixerCallCount % 500 == 0 {
+                log("Mixer callback #\(mixerCallCount), data=\(stereoData.count) bytes, vadGate=\(self.vadGateService != nil)")
+            }
+            // Always use local STT path
+            if true {
+                // Local STT: VAD gate accumulates audio, on speech-end we transcribe
+                guard let gate = self.vadGateService else {
+                    // Log once per 1000 callbacks to avoid flooding
+                    if Int.random(in: 0..<1000) == 0 {
+                        log("Local STT: vadGateService is nil — audio dropped")
+                    }
+                    return
+                }
+                let output = gate.processAudioBatch(stereoData)
+                if output.isComplete, let audioBuffer = output.audioBuffer {
+                    // Extract left channel (mic) from stereo interleaved PCM16 data
+                    // Stereo layout: [L0 L0 R0 R0 L1 L1 R1 R1 ...] (16-bit = 2 bytes per sample)
+                    let bytesPerSample = 2
+                    let channels = 2
+                    let frameSize = bytesPerSample * channels // 4 bytes per stereo frame
+                    let frameCount = audioBuffer.count / frameSize
+                    var monoData = Data(capacity: frameCount * bytesPerSample)
+                    audioBuffer.withUnsafeBytes { raw in
+                        let ptr = raw.bindMemory(to: UInt8.self)
+                        for i in 0..<frameCount {
+                            let offset = i * frameSize // left channel is at start of each frame
+                            monoData.append(ptr[offset])
+                            monoData.append(ptr[offset + 1])
+                        }
+                    }
+                    log("Local STT: VAD speech chunk — \(audioBuffer.count) stereo → \(monoData.count) mono bytes")
+                    Task { [weak self] in
+                        guard let self = self, let stt = self.localSTTService else {
+                            log("Local STT: localSTTService is nil, skipping")
+                            return
+                        }
+                        await stt.sendAudio(monoData)
+                        await stt.speechEnded()
+                    }
+                }
+            } else if self.useBatchTranscription {
+                // Batch mode (Deepgram): accumulate audio in VAD gate, transcribe on silence
                 guard let gate = self.vadGateService else { return }
                 let output = gate.processAudioBatch(stereoData)
                 if output.isComplete, let audioBuffer = output.audioBuffer {
@@ -1321,7 +1415,7 @@ class AppState: ObservableObject {
                     }
                 }
             } else if let gate = self.vadGateService {
-                // Streaming mode with VAD gate
+                // Streaming mode with VAD gate (Deepgram)
                 let output = gate.processAudio(stereoData)
                 if !output.audioToSend.isEmpty {
                     self.transcriptionService?.sendAudio(output.audioToSend)
@@ -1332,7 +1426,7 @@ class AppState: ObservableObject {
                     self.transcriptionService?.sendFinalize()
                 }
             } else {
-                // Streaming mode without VAD gate
+                // Streaming mode without VAD gate (Deepgram)
                 self.transcriptionService?.sendAudio(stereoData)
             }
         }
@@ -1587,9 +1681,15 @@ class AppState: ObservableObject {
         // Clear VAD gate
         vadGateService = nil
 
-        // Stop transcription service
+        // Stop transcription services
         transcriptionService?.stop()
         transcriptionService = nil
+
+        // Stop local STT service
+        if let stt = localSTTService {
+            Task { await stt.shutdown() }
+        }
+        localSTTService = nil
 
         isTranscribing = false
     }
@@ -2232,6 +2332,10 @@ class AppState: ObservableObject {
             if segment.speechFinal && !segment.text.isEmpty {
                 appendToTranscript(segment.text)
                 log("Transcript [FINAL no words] Ch\(segment.channelIndex) Speaker \(channelBasedSpeaker): \(segment.text)")
+                // Forward to voice conversation manager if active
+                if let voiceCallback = onVoiceTranscript {
+                    voiceCallback(segment.text)
+                }
             }
             return
         }
@@ -2325,6 +2429,15 @@ class AppState: ObservableObject {
 
         // Update display transcript
         updateTranscriptDisplay()
+
+        // Forward transcript to voice conversation manager if active
+        if let voiceCallback = onVoiceTranscript {
+            let fullText = newSegments.map { $0.text }.joined(separator: " ")
+            if !fullText.isEmpty {
+                log("Voice callback: forwarding transcript (\(fullText.count) chars)")
+                voiceCallback(fullText)
+            }
+        }
 
         // Persist new segments to DB for crash safety
         if let sessionId = currentSessionId {
@@ -2464,12 +2577,12 @@ class AppState: ObservableObject {
         log("Cleared onboarding UserDefaults keys")
 
         // Also clear UserDefaults for both bundle IDs
-        if let prodDefaults = UserDefaults(suiteName: "com.omi.computer-macos") {
+        if let prodDefaults = UserDefaults(suiteName: "com.vibeaiglobal.vibeai") {
             for key in onboardingKeys {
                 prodDefaults.removeObject(forKey: key)
             }
         }
-        if let devDefaults = UserDefaults(suiteName: "com.omi.desktop-dev") {
+        if let devDefaults = UserDefaults(suiteName: "com.vibeaiglobal.vibeai-dev") {
             for key in onboardingKeys {
                 devDefaults.removeObject(forKey: key)
             }
@@ -2480,7 +2593,7 @@ class AppState: ObservableObject {
             // 1. Clean conflicting app bundles from Trash, DerivedData, DMG staging
             cleanConflictingAppBundles()
 
-            // 2. Eject any mounted Omi DMG volumes
+            // 2. Eject any mounted Vibe AI DMG volumes
             ejectMountedDMGVolumes()
 
             // 3. Reset Launch Services database to clear stale registrations
@@ -2491,8 +2604,8 @@ class AppState: ObservableObject {
 
             // 5. Reset ALL TCC permissions using tccutil for BOTH bundle IDs
             let bundleIds = [
-                "com.omi.computer-macos",       // Production
-                "com.omi.desktop-dev"           // Development
+                "com.vibeaiglobal.vibeai",       // Production
+                "com.vibeaiglobal.vibeai-dev"   // Development
             ]
 
             for id in bundleIds {
@@ -2522,10 +2635,10 @@ class AppState: ObservableObject {
         let fileManager = FileManager.default
         let homeDir = fileManager.homeDirectoryForCurrentUser.path
 
-        // Clean Omi apps from Trash (they still pollute Launch Services!)
+        // Clean Vibe AI apps from Trash (they still pollute Launch Services!)
         let trashPath = "\(homeDir)/.Trash"
         if let contents = try? fileManager.contentsOfDirectory(atPath: trashPath) {
-            for item in contents where item.lowercased().contains("omi") {
+            for item in contents where item.lowercased().contains("omi") || item.lowercased().contains("vibe ai") {
                 let itemPath = "\(trashPath)/\(item)"
                 do {
                     try fileManager.removeItem(atPath: itemPath)
@@ -2539,7 +2652,7 @@ class AppState: ObservableObject {
         // Clean DMG staging directories
         let tmpDir = "/private/tmp"
         if let contents = try? fileManager.contentsOfDirectory(atPath: tmpDir) {
-            for item in contents where item.hasPrefix("omi-dmg-staging") || item.hasPrefix("omi-dmg-test") {
+            for item in contents where item.hasPrefix("omi-dmg-staging") || item.hasPrefix("omi-dmg-test") || item.hasPrefix("vibeai-dmg-staging") || item.hasPrefix("vibeai-dmg-test") {
                 let itemPath = "\(tmpDir)/\(item)"
                 do {
                     try fileManager.removeItem(atPath: itemPath)
@@ -2550,17 +2663,17 @@ class AppState: ObservableObject {
             }
         }
 
-        // Clean Xcode DerivedData Omi builds
+        // Clean Xcode DerivedData Vibe AI builds
         let derivedDataPath = "\(homeDir)/Library/Developer/Xcode/DerivedData"
         if let contents = try? fileManager.contentsOfDirectory(atPath: derivedDataPath) {
-            for item in contents where item.lowercased().contains("omi") {
+            for item in contents where item.lowercased().contains("omi") || item.lowercased().contains("vibe") {
                 let buildProductsPath = "\(derivedDataPath)/\(item)/Build/Products"
                 if let buildDirs = try? fileManager.contentsOfDirectory(atPath: buildProductsPath) {
                     for buildDir in buildDirs {
-                        let appPath = "\(buildProductsPath)/\(buildDir)/Omi.app"
-                        let appPath2 = "\(buildProductsPath)/\(buildDir)/Omi Computer.app"
-                        let appPath3 = "\(buildProductsPath)/\(buildDir)/Omi Beta.app"
-                        let appPath4 = "\(buildProductsPath)/\(buildDir)/Omi Dev.app"
+                        let appPath = "\(buildProductsPath)/\(buildDir)/Vibe AI.app"
+                        let appPath2 = "\(buildProductsPath)/\(buildDir)/Vibe AI.app"
+                        let appPath3 = "\(buildProductsPath)/\(buildDir)/Vibe AI.app"
+                        let appPath4 = "\(buildProductsPath)/\(buildDir)/Vibe AI Dev.app"
                         for path in [appPath, appPath2, appPath3, appPath4] {
                             if fileManager.fileExists(atPath: path) {
                                 do {
@@ -2577,14 +2690,14 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Eject any mounted Omi DMG volumes
+    /// Eject any mounted Vibe AI DMG volumes
     private nonisolated func ejectMountedDMGVolumes() {
         let fileManager = FileManager.default
         let volumesPath = "/Volumes"
 
         guard let contents = try? fileManager.contentsOfDirectory(atPath: volumesPath) else { return }
 
-        for volume in contents where volume.lowercased().contains("omi") || volume.hasPrefix("dmg.") {
+        for volume in contents where volume.lowercased().contains("omi") || volume.lowercased().contains("vibe ai") || volume.hasPrefix("dmg.") {
             let volumePath = "\(volumesPath)/\(volume)"
 
             // Try diskutil eject first
@@ -2634,14 +2747,14 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Clean user TCC database entries for Omi apps
+    /// Clean user TCC database entries for Vibe AI apps
     private nonisolated func cleanUserTCCDatabase() {
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
         let tccDbPath = "\(homeDir)/Library/Application Support/com.apple.TCC/TCC.db"
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/sqlite3")
-        process.arguments = [tccDbPath, "DELETE FROM access WHERE client LIKE '%com.omi.computer-macos%';"]
+        process.arguments = [tccDbPath, "DELETE FROM access WHERE client LIKE '%com.vibeaiglobal.vibeai%';"]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
 
@@ -2653,10 +2766,10 @@ class AppState: ObservableObject {
             log("Failed to clean user TCC database: \(error.localizedDescription)")
         }
 
-        // Also clean entries for new dev bundle ID pattern (com.omi.desktop-dev)
+        // Also clean entries for dev bundle ID pattern (com.vibeaiglobal.vibeai-dev)
         let process2 = Process()
         process2.executableURL = URL(fileURLWithPath: "/usr/bin/sqlite3")
-        process2.arguments = [tccDbPath, "DELETE FROM access WHERE client LIKE '%com.omi.desktop%';"]
+        process2.arguments = [tccDbPath, "DELETE FROM access WHERE client LIKE '%com.vibeaiglobal.vibeai-dev%';"]
         process2.standardOutput = FileHandle.nullDevice
         process2.standardError = FileHandle.nullDevice
 
@@ -2673,7 +2786,7 @@ class AppState: ObservableObject {
     /// Returns true if the reset command was executed successfully
     /// If shouldRestart is true, the app will restart after reset
     nonisolated func resetMicrophonePermissionDirect(shouldRestart: Bool = false) -> Bool {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.omi.computer-macos"
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.vibeaiglobal.vibeai"
         log("Resetting microphone permission for \(bundleId) via tccutil...")
 
         let process = Process()
@@ -2700,7 +2813,7 @@ class AppState: ObservableObject {
     /// Reset microphone permission via Terminal (Option 2: Visible to user)
     /// If shouldRestart is true, the app will restart after the terminal command
     func resetMicrophonePermissionViaTerminal(shouldRestart: Bool = false) {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.omi.computer-macos"
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.vibeaiglobal.vibeai"
         let appPath = Bundle.main.bundleURL.path
         log("Opening Terminal to reset microphone permission for \(bundleId)...")
 
@@ -2799,7 +2912,7 @@ extension Notification.Name {
     static let navigateToDeviceSettings = Notification.Name("navigateToDeviceSettings")
     /// Posted to navigate to Task Assistant settings (Developer Settings)
     static let navigateToTaskSettings = Notification.Name("navigateToTaskSettings")
-    /// Posted to navigate to Ask Omi Floating Bar settings
+    /// Posted to navigate to Ask Vibe AI Floating Bar settings
     static let navigateToFloatingBarSettings = Notification.Name("navigateToFloatingBarSettings")
     /// Posted to navigate to AI Chat settings
     static let navigateToAIChatSettings = Notification.Name("navigateToAIChatSettings")

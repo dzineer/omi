@@ -14,11 +14,14 @@ class ViewModelContainer: ObservableObject {
     let memoriesViewModel = MemoriesViewModel()
     let chatProvider: ChatProvider
     let taskChatCoordinator: TaskChatCoordinator
+    let voiceManager: VoiceConversationManager
 
     init() {
         let provider = ChatProvider()
         chatProvider = provider
         taskChatCoordinator = TaskChatCoordinator(chatProvider: provider)
+        voiceManager = VoiceConversationManager()
+        voiceManager.configure(chatProvider: provider)
     }
 
     // Loading state

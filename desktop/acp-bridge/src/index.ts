@@ -1,10 +1,10 @@
 /**
- * ACP Bridge — translates between OMI's JSON-lines protocol and the
+ * ACP Bridge — translates between Vibe AI's JSON-lines protocol and the
  * Agent Client Protocol (ACP) used by claude-code-acp.
  *
  * THIS IS THE DESKTOP APP FLOW. It is unrelated to the VM/agent-cloud flow
  * (agent-cloud/agent.mjs), which runs Claude Code SDK on a remote VM for
- * the Omi Agent feature. This bridge runs locally on the user's Mac.
+ * the Vibe AI Agent feature. This bridge runs locally on the user's Mac.
  *
  * Session lifecycle:
  * 1. warmup  → session/new (system prompt applied here, once)
@@ -19,7 +19,7 @@
  * the AGGREGATE across all those rounds. There are no separate sub-agents.
  *
  * Implementation flow:
- * 1. Create Unix socket server for omi-tools relay
+ * 1. Create Unix socket server for vibeai-tools relay
  * 2. Spawn claude-code-acp as subprocess (JSON-RPC over stdio)
  * 3. Initialize ACP connection
  * 4. Handle auth if required (forward to Swift, wait for user action)
@@ -55,7 +55,7 @@ const playwrightCli = join(
   "cli.js"
 );
 
-const omiToolsStdioScript = join(__dirname, "omi-tools-stdio.js");
+const omiToolsStdioScript = join(__dirname, "vibeai-tools-stdio.js");
 
 // --- Helpers ---
 
@@ -71,7 +71,7 @@ function logErr(msg: string): void {
   process.stderr.write(`[acp-bridge] ${msg}\n`);
 }
 
-// --- OMI tools relay via Unix socket ---
+// --- Vibe AI tools relay via Unix socket ---
 
 let omiToolsPipePath = "";
 let omiToolsClients: Socket[] = [];
@@ -95,9 +95,9 @@ function resolveToolCall(msg: { callId: string; result: string }): void {
   }
 }
 
-/** Start Unix socket server for omi-tools stdio processes to connect to */
+/** Start Unix socket server for vibeai-tools stdio processes to connect to */
 function startOmiToolsRelay(): Promise<string> {
-  const pipePath = join(tmpdir(), `omi-tools-${process.pid}.sock`);
+  const pipePath = join(tmpdir(), `vibeai-tools-${process.pid}.sock`);
 
   // Clean up any stale socket
   try {
@@ -140,7 +140,7 @@ function startOmiToolsRelay(): Promise<string> {
               const callId = msg.callId;
               pendingToolCalls.set(callId, {
                 resolve: (result: string) => {
-                  // Send result back to the omi-tools stdio process
+                  // Send result back to the vibeai-tools stdio process
                   try {
                     client.write(
                       JSON.stringify({
@@ -150,13 +150,13 @@ function startOmiToolsRelay(): Promise<string> {
                       }) + "\n"
                     );
                   } catch (err) {
-                    logErr(`Failed to send tool result to omi-tools: ${err}`);
+                    logErr(`Failed to send tool result to vibeai-tools: ${err}`);
                   }
                 },
               });
             }
           } catch {
-            logErr(`Failed to parse omi-tools message: ${line.slice(0, 200)}`);
+            logErr(`Failed to parse vibeai-tools message: ${line.slice(0, 200)}`);
           }
         }
       });
@@ -166,12 +166,12 @@ function startOmiToolsRelay(): Promise<string> {
       });
 
       client.on("error", (err) => {
-        logErr(`omi-tools client error: ${err.message}`);
+        logErr(`vibeai-tools client error: ${err.message}`);
       });
     });
 
     server.listen(pipePath, () => {
-      logErr(`omi-tools relay socket: ${pipePath}`);
+      logErr(`vibeai-tools relay socket: ${pipePath}`);
       resolve(pipePath);
     });
 
@@ -233,7 +233,7 @@ function acpNotify(
 /** Start the ACP subprocess */
 function startAcpProcess(): void {
   // Build environment for ACP subprocess
-  // If ANTHROPIC_API_KEY is present (Mode A), keep it so ACP uses OMI's key.
+  // If ANTHROPIC_API_KEY is present (Mode A), keep it so ACP uses Vibe AI's key.
   // If absent (Mode B), ACP will use user's own OAuth.
   const env = { ...process.env };
   delete env.CLAUDE_CODE_USE_VERTEX;
@@ -248,7 +248,7 @@ function startAcpProcess(): void {
   const acpEntry = join(__dirname, "patched-acp-entry.mjs");
   const nodeBin = process.execPath;
 
-  const mode = env.ANTHROPIC_API_KEY ? "Mode A (Omi API key)" : "Mode B (Your Claude Account / OAuth)";
+  const mode = env.ANTHROPIC_API_KEY ? "Mode A (Vibe AI API key)" : "Mode B (Your Claude Account / OAuth)";
   logErr(`Starting ACP subprocess [${mode}]: ${nodeBin} ${acpEntry}`);
 
   acpProcess = spawn(nodeBin, [acpEntry], {
@@ -535,7 +535,7 @@ type McpServerConfig = {
 function buildMcpServers(mode: string, cwd?: string, sessionKey?: string): McpServerConfig[] {
   const servers: McpServerConfig[] = [];
 
-  // omi-tools (stdio, connects back via Unix socket)
+  // vibeai-tools (stdio, connects back via Unix socket)
   const omiToolsEnv: Array<{ name: string; value: string }> = [
     { name: "OMI_BRIDGE_PIPE", value: omiToolsPipePath },
     { name: "OMI_QUERY_MODE", value: mode },
@@ -547,30 +547,29 @@ function buildMcpServers(mode: string, cwd?: string, sessionKey?: string): McpSe
     omiToolsEnv.push({ name: "OMI_ONBOARDING", value: "true" });
   }
   servers.push({
-    name: "omi-tools",
+    name: "vibeai-tools",
     command: process.execPath,
     args: [omiToolsStdioScript],
     env: omiToolsEnv,
   });
 
-  // Playwright MCP server
-  const playwrightArgs = [playwrightCli];
+  // Playwright MCP server — only include if explicitly enabled
   if (process.env.PLAYWRIGHT_USE_EXTENSION === "true") {
-    playwrightArgs.push("--extension");
-  }
-  const playwrightEnv: Array<{ name: string; value: string }> = [];
-  if (process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN) {
-    playwrightEnv.push({
-      name: "PLAYWRIGHT_MCP_EXTENSION_TOKEN",
-      value: process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN,
+    const playwrightArgs = [playwrightCli, "--extension"];
+    const playwrightEnv: Array<{ name: string; value: string }> = [];
+    if (process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN) {
+      playwrightEnv.push({
+        name: "PLAYWRIGHT_MCP_EXTENSION_TOKEN",
+        value: process.env.PLAYWRIGHT_MCP_EXTENSION_TOKEN,
+      });
+    }
+    servers.push({
+      name: "playwright",
+      command: process.execPath,
+      args: playwrightArgs,
+      env: playwrightEnv,
     });
   }
-  servers.push({
-    name: "playwright",
-    command: process.execPath,
-    args: playwrightArgs,
-    env: playwrightEnv,
-  });
 
   return servers;
 }
@@ -1089,9 +1088,9 @@ process.stdout.on("error", (err) => {
 async function main(): Promise<void> {
   logErr(`Bridge main() starting (pid=${process.pid}, node=${process.version}, execPath=${process.execPath})`);
 
-  // 1. Start Unix socket for omi-tools relay
+  // 1. Start Unix socket for vibeai-tools relay
   omiToolsPipePath = await startOmiToolsRelay();
-  logErr("omi-tools relay started");
+  logErr("vibeai-tools relay started");
 
   // 2. Start the ACP subprocess
   startAcpProcess();

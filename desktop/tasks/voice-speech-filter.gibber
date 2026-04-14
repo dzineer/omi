@@ -1,0 +1,14 @@
+---
+id: VOICE-FILTER-001
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:VOICE-FILTER-001
+  §status:§wip
+  §owner:§ai
+  §goal:(§build §speech-text-filter
+    §strip §markdown §code §formatting §from §ai-response
+    §before §sending §to §tts
+    §output §plain §conversational §english)
+  §files:[Desktop/Sources/Voice/SpeechTextFilter.swift
+          Desktop/Sources/Voice/VoiceConversationManager.swift])

@@ -144,14 +144,23 @@ final class VoiceConversationManager: ObservableObject {
         state = .listening
     }
 
-    /// Speak the AI response via TTS, then resume listening
+    /// Speak the AI response via TTS, then resume listening.
+    /// Filters markdown/code/formatting into plain conversational English first.
     private func speakResponse(_ text: String) async {
         guard isActive else { return }
         state = .speaking
 
+        // Filter out markdown, code blocks, formatting — speak plain English only
+        let speakableText = SpeechTextFilter.filterForSpeech(text)
+        guard !speakableText.isEmpty else {
+            log("VoiceConversationManager: Nothing speakable after filtering")
+            if isActive { state = .listening }
+            return
+        }
+
         if let tts = ttsService {
-            log("VoiceConversationManager: Speaking response...")
-            await tts.speak(text)
+            log("VoiceConversationManager: Speaking response (\(speakableText.count) chars after filter)...")
+            await tts.speak(speakableText)
 
             var waitCount = 0
             while await tts.isSpeaking && waitCount < 120 {

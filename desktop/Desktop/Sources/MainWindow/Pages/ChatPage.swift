@@ -511,7 +511,7 @@ struct ChatPage: View {
 
     private var inputArea: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            // Voice button
+            // Mic button — toggles voice input (STT)
             Button(action: {
                 Task {
                     if voiceManager.isActive {
@@ -527,7 +527,19 @@ struct ChatPage: View {
                     .animation(.easeInOut(duration: 0.3), value: voiceManager.isActive)
             }
             .buttonStyle(.plain)
-            .help(voiceManager.isActive ? "Stop voice conversation" : "Start voice conversation")
+            .help(voiceManager.isActive ? "Stop voice input" : "Start voice input")
+
+            // Speaker button — toggles voice output (TTS)
+            Button(action: {
+                voiceManager.toggleSpeak()
+            }) {
+                Image(systemName: voiceManager.speakEnabled ? "speaker.wave.2.circle.fill" : "speaker.slash.circle.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(voiceManager.speakEnabled ? .blue : VibeAIColors.textTertiary)
+                    .animation(.easeInOut(duration: 0.3), value: voiceManager.speakEnabled)
+            }
+            .buttonStyle(.plain)
+            .help(voiceManager.speakEnabled ? "Mute AI voice" : "Enable AI voice")
 
             ChatInputView(
                 onSend: { text in

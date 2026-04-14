@@ -6,7 +6,6 @@ import Combine
 /// sends transcript to ChatProvider -> AI responds -> LocalTTSService speaks response
 ///
 /// Does NOT manage its own STT — hooks into AppState's existing transcription pipeline.
-/// The transcript arrives via the onVoiceTranscript callback that AppState calls.
 @MainActor
 final class VoiceConversationManager: ObservableObject {
 
@@ -21,14 +20,15 @@ final class VoiceConversationManager: ObservableObject {
 
     @Published var state: VoiceState = .idle
     @Published var isActive = false
+    @Published var speakEnabled = false
     @Published var lastTranscript = ""
 
     // MARK: - Dependencies
 
     private var chatProvider: ChatProvider?
+    private var appState: AppState?
     private var ttsService: LocalTTSService?
 
-    // Track message count to detect new AI responses
     private var lastMessageCount = 0
     private var pendingUserMessage = false
 
@@ -38,22 +38,17 @@ final class VoiceConversationManager: ObservableObject {
         log("VoiceConversationManager: Initialized")
     }
 
-    private var appState: AppState?
-
     func configure(chatProvider: ChatProvider) {
         self.chatProvider = chatProvider
     }
 
-    /// Wire to AppState so we receive transcripts from the STT pipeline
     func connectToAppState(_ appState: AppState) {
         self.appState = appState
     }
 
     // MARK: - Voice Loop Control
 
-    /// Start voice conversation mode.
-    /// AppState handles STT — this manager just needs to be active so
-    /// transcripts get routed to Claude and responses get spoken.
+    /// Start voice conversation mode (mic input → Claude → text response in chat)
     func start() async {
         guard !isActive else { return }
 
@@ -61,7 +56,6 @@ final class VoiceConversationManager: ObservableObject {
         isActive = true
         state = .listening
 
-        // Wire AppState callback so transcripts flow to us
         appState?.onVoiceTranscript = { [weak self] text in
             Task { @MainActor in
                 await self?.handleTranscript(text)
@@ -74,9 +68,7 @@ final class VoiceConversationManager: ObservableObject {
     func stop() async {
         guard isActive else { return }
 
-        // Unwire callback
         appState?.onVoiceTranscript = nil
-
         isActive = false
         state = .idle
         pendingUserMessage = false
@@ -87,11 +79,30 @@ final class VoiceConversationManager: ObservableObject {
         log("VoiceConversationManager: Stopped")
     }
 
-    /// Called by AppState when a transcript is produced (via LocalSTTService).
-    /// This is the entry point from the existing transcription pipeline.
-    func handleTranscript(_ text: String) async {
+    /// Toggle speaker output on/off
+    func toggleSpeak() {
+        speakEnabled.toggle()
+        log("VoiceConversationManager: Speak \(speakEnabled ? "enabled" : "disabled")")
+        if !speakEnabled {
+            // Stop any current speech
+            ttsService?.stop()
+            if state == .speaking {
+                state = .listening
+            }
+        }
+    }
+
+    // MARK: - Internal Flow
+
+    private func handleTranscript(_ text: String) async {
         guard isActive else { return }
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+        // Ignore transcripts while AI is speaking (feedback prevention)
+        if state == .speaking {
+            log("VoiceConversationManager: Ignoring transcript during speech (feedback prevention)")
+            return
+        }
 
         lastTranscript = text
         state = .thinking
@@ -103,23 +114,18 @@ final class VoiceConversationManager: ObservableObject {
             return
         }
 
-        // Record current message count to detect when AI responds
         lastMessageCount = chatProvider.messages.count
         pendingUserMessage = true
 
-        // Send the transcribed text as a chat message
         await chatProvider.sendMessage(text)
-
-        // Wait for AI response
         await waitForAIResponse()
     }
 
-    /// Poll for the AI response after sending a message
     private func waitForAIResponse() async {
         guard let chatProvider = chatProvider, pendingUserMessage else { return }
 
         for _ in 0..<60 {
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+            try? await Task.sleep(nanoseconds: 500_000_000)
 
             guard isActive, pendingUserMessage else { return }
 
@@ -128,8 +134,8 @@ final class VoiceConversationManager: ObservableObject {
                     let responseText = lastMessage.text
                     pendingUserMessage = false
 
-                    if !responseText.isEmpty {
-                        log("VoiceConversationManager: AI responded (\(responseText.count) chars)")
+                    if !responseText.isEmpty && speakEnabled {
+                        log("VoiceConversationManager: AI responded (\(responseText.count) chars), speaking...")
                         await speakResponse(responseText)
                     } else {
                         state = .listening
@@ -144,24 +150,27 @@ final class VoiceConversationManager: ObservableObject {
         state = .listening
     }
 
-    /// Speak the AI response via TTS, then resume listening.
-    /// Filters markdown/code/formatting into plain conversational English first.
     private func speakResponse(_ text: String) async {
-        guard isActive else { return }
-        state = .speaking
-
-        // Filter out markdown, code blocks, formatting — speak plain English only
-        let speakableText = SpeechTextFilter.filterForSpeech(text)
-        guard !speakableText.isEmpty else {
-            log("VoiceConversationManager: Nothing speakable after filtering")
-            if isActive { state = .listening }
+        guard isActive, speakEnabled else {
+            state = .listening
             return
         }
 
+        state = .speaking
+
+        let speakableText = SpeechTextFilter.filterForSpeech(text)
+        guard !speakableText.isEmpty else {
+            log("VoiceConversationManager: Nothing speakable after filtering")
+            state = .listening
+            return
+        }
+
+        log("VoiceConversationManager: Speaking response (\(speakableText.count) chars after filter)...")
+
         if let tts = ttsService {
-            log("VoiceConversationManager: Speaking response (\(speakableText.count) chars after filter)...")
             await tts.speak(speakableText)
 
+            // Wait for TTS to finish
             var waitCount = 0
             while await tts.isSpeaking && waitCount < 120 {
                 try? await Task.sleep(nanoseconds: 500_000_000)

@@ -1,14 +1,9 @@
 import Foundation
-#if canImport(OnnxRuntimeBindings)
-import OnnxRuntimeBindings
-#elseif canImport(onnxruntime)
-import onnxruntime
-#endif
+import AVFoundation
 
-// MARK: - Local TTS Service (Kokoro ONNX)
-
-/// On-device text-to-speech using the Kokoro ONNX model.
-/// Generates PCM float32 audio at 24kHz and plays it through TTSAudioPlayer.
+/// On-device text-to-speech using Kokoro via a local Python server on port 8788.
+/// The server handles phoneme tokenization and ONNX inference.
+/// Audio is returned as WAV and played via AVAudioEngine.
 actor LocalTTSService {
 
     // MARK: - Public Properties
@@ -17,7 +12,6 @@ actor LocalTTSService {
         return player.isPlaying
     }
 
-    // Callbacks (set from outside before calling speak)
     nonisolated var onSpeechStarted: (() -> Void)? {
         get { player.onPlaybackStarted }
         set { player.onPlaybackStarted = newValue }
@@ -30,337 +24,201 @@ actor LocalTTSService {
 
     // MARK: - Constants
 
-    private static let modelFileName = "kokoro-v1.0.onnx"
-    private static let voicesFileName = "voices-v1.0.bin"
-    private static let sampleRate = 24000
+    private static let serverPort = 8788
+    private static let baseURL = "http://127.0.0.1:8788"
     private static let defaultVoice = "af_heart"
-    /// Voice embedding dimension for Kokoro v1.0
-    private static let voiceEmbeddingDim = 256
-
-    // Download URLs for model files
-    private static let modelDownloadURL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
-    private static let voicesDownloadURL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
 
     // MARK: - Private Properties
 
-    // nonisolated(unsafe) because TTSAudioPlayer is internally thread-safe (NSLock)
-    // and we need to access it from nonisolated stop()/callback setters.
     nonisolated(unsafe) private let player = TTSAudioPlayer()
-    private var isModelLoaded = false
-
-#if canImport(OnnxRuntimeBindings) || canImport(onnxruntime)
-    private var env: ORTEnv?
-    private var session: ORTSession?
-#endif
-
-    /// Voice embeddings loaded from voices-v1.0.bin keyed by voice name.
-    private var voiceEmbeddings: [String: [Float]] = [:]
+    private var serverProcess: Process?
+    private var isServerRunning = false
 
     // MARK: - Public Methods
 
-    /// Speak the given text using the default voice.
     func speak(_ text: String) async {
         await speak(text, voice: Self.defaultVoice)
     }
 
-    /// Speak the given text using the specified voice.
-    /// Tries Kokoro ONNX first; falls back to macOS `say` command if unavailable.
     func speak(_ text: String, voice: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        // Try Kokoro ONNX first
-        do {
-            try await ensureModelLoaded()
-            if let audioData = generateAudio(text: trimmed, voice: voice) {
-                log("LocalTTSService: Playing Kokoro audio (\(audioData.count) bytes)")
-                player.play(audioData, sampleRate: Self.sampleRate)
-                return
-            }
-        } catch {
-            log("LocalTTSService: Kokoro unavailable (\(error.localizedDescription)), falling back to macOS say")
+        // Ensure Kokoro server is running
+        await ensureServerRunning()
+
+        // Call the Kokoro TTS server
+        guard let wavData = await generateSpeech(text: trimmed, voice: voice) else {
+            logError("LocalTTSService: Failed to generate speech")
+            return
         }
 
-        // Fallback: macOS say command (always available, less natural voice)
-        await speakWithSay(trimmed)
+        // Play the WAV audio
+        player.play(wavData, sampleRate: 24000)
+        log("LocalTTSService: Playing Kokoro audio (\(wavData.count) bytes)")
     }
 
-    /// Fallback TTS using macOS built-in `say` command.
-    private func speakWithSay(_ text: String) async {
-        log("LocalTTSService: Using macOS say fallback")
-        let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: "/usr/bin/say")
-        // Use Samantha voice (best built-in English voice on macOS)
-        proc.arguments = ["-v", "Samantha", "-r", "190", text]
-        proc.standardOutput = FileHandle.nullDevice
-        proc.standardError = FileHandle.nullDevice
-
-        do {
-            try proc.run()
-            proc.waitUntilExit()
-        } catch {
-            logError("LocalTTSService: say command failed", error: error)
-        }
-    }
-
-    /// Stop current speech immediately.
     nonisolated func stop() {
         player.stop()
     }
 
-    // MARK: - Model Loading
-
-    private func ensureModelLoaded() async throws {
-        guard !isModelLoaded else { return }
-
-#if canImport(OnnxRuntimeBindings) || canImport(onnxruntime)
-        let modelPath = try await ensureModelFile(Self.modelFileName, downloadURL: Self.modelDownloadURL)
-        let voicesPath = try await ensureModelFile(Self.voicesFileName, downloadURL: Self.voicesDownloadURL)
-
-        let ortEnv = try ORTEnv(loggingLevel: .warning)
-        let sessionOptions = try ORTSessionOptions()
-        try sessionOptions.setIntraOpNumThreads(2)
-        let ortSession = try ORTSession(env: ortEnv, modelPath: modelPath, sessionOptions: sessionOptions)
-
-        self.env = ortEnv
-        self.session = ortSession
-
-        loadVoiceEmbeddings(from: voicesPath)
-
-        isModelLoaded = true
-        log("LocalTTSService: Model loaded successfully from \(modelPath)")
-#else
-        log("LocalTTSService: ONNX Runtime not available -- TTS disabled")
-        throw LocalTTSError.onnxNotAvailable
-#endif
+    func shutdown() async {
+        player.stop()
+        serverProcess?.terminate()
+        serverProcess = nil
+        isServerRunning = false
+        log("LocalTTSService: Shut down")
     }
 
-    /// Returns the local file path for a model file, downloading it if not present.
-    private func ensureModelFile(_ fileName: String, downloadURL: String) async throws -> String {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let ttsDir = appSupport.appendingPathComponent("VoiceTTS", isDirectory: true)
+    // MARK: - Server Management
 
-        try FileManager.default.createDirectory(at: ttsDir, withIntermediateDirectories: true)
-
-        let filePath = ttsDir.appendingPathComponent(fileName)
-
-        if FileManager.default.fileExists(atPath: filePath.path) {
-            return filePath.path
+    private func ensureServerRunning() async {
+        if isServerRunning {
+            // Quick health check
+            if await checkHealth() { return }
+            isServerRunning = false
         }
 
-        log("LocalTTSService: Downloading \(fileName) from \(downloadURL)")
-
-        guard let url = URL(string: downloadURL) else {
-            throw LocalTTSError.invalidDownloadURL(downloadURL)
-        }
-
-        let (tempURL, response) = try await URLSession.shared.download(from: url)
-
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
-            throw LocalTTSError.downloadFailed(fileName, httpResponse.statusCode)
-        }
-
-        try FileManager.default.moveItem(at: tempURL, to: filePath)
-        log("LocalTTSService: Downloaded \(fileName) to \(filePath.path)")
-
-        return filePath.path
+        await startServer()
     }
 
-    // MARK: - Voice Embeddings
-
-    /// Load voice embeddings from the binary voices file.
-    /// The file format is a flat binary of float32 arrays, indexed by voice name.
-    /// For MVP we load the raw bytes and extract known voice embeddings.
-    private func loadVoiceEmbeddings(from path: String) {
-        guard let data = FileManager.default.contents(atPath: path) else {
-            logError("LocalTTSService: Could not read voices file at \(path)")
+    private func startServer() async {
+        // Find Python
+        let pythonPath = findPython()
+        guard let python = pythonPath else {
+            logError("LocalTTSService: Python not found")
             return
         }
 
-        // voices-v1.0.bin is a numpy .npy-like format: a dictionary of voice_name -> float32[256]
-        // For now, treat the entire file as a flat array of float32 and use the default voice offset.
-        // A full implementation would parse the file header to find voice name offsets.
-        let totalFloats = data.count / MemoryLayout<Float>.size
-        log("LocalTTSService: Voices file loaded (\(data.count) bytes, \(totalFloats) floats)")
-
-        // Store raw data for later extraction. The actual format parsing happens in getVoiceEmbedding.
-        voiceEmbeddings["__raw_data__"] = data.withUnsafeBytes { ptr in
-            let floats = ptr.bindMemory(to: Float.self)
-            return Array(floats)
-        }
-    }
-
-    /// Get the embedding vector for a named voice.
-    /// Falls back to the first embedding if the voice name is not found.
-    private func getVoiceEmbedding(voice: String) -> [Float]? {
-        // If we have a pre-parsed embedding for this voice, use it
-        if let embedding = voiceEmbeddings[voice], embedding.count == Self.voiceEmbeddingDim {
-            return embedding
+        let scriptPath = NSHomeDirectory() + "/Library/Application Support/VoiceAI/kokoro_tts_server.py"
+        guard FileManager.default.fileExists(atPath: scriptPath) else {
+            logError("LocalTTSService: kokoro_tts_server.py not found at \(scriptPath)")
+            return
         }
 
-        // Fall back to extracting from raw data
-        guard let rawFloats = voiceEmbeddings["__raw_data__"], rawFloats.count >= Self.voiceEmbeddingDim else {
-            return nil
-        }
+        // Kill any stale process on our port
+        let killProc = Process()
+        killProc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        killProc.arguments = ["bash", "-c", "lsof -ti:8788 | xargs kill -9 2>/dev/null"]
+        killProc.standardOutput = FileHandle.nullDevice
+        killProc.standardError = FileHandle.nullDevice
+        try? killProc.run()
+        killProc.waitUntilExit()
 
-        // Use the first embedding as default (offset 0)
-        let embedding = Array(rawFloats.prefix(Self.voiceEmbeddingDim))
-        return embedding
-    }
-
-    // MARK: - Audio Generation
-
-    /// Run ONNX inference to generate PCM float32 audio from text.
-    private func generateAudio(text: String, voice: String) -> Data? {
-#if canImport(OnnxRuntimeBindings) || canImport(onnxruntime)
-        guard let session = self.session else {
-            logError("LocalTTSService: No ONNX session available")
-            return nil
-        }
-
-        // Convert text to phoneme token IDs
-        let tokens = textToTokens(text)
-        guard !tokens.isEmpty else {
-            logError("LocalTTSService: No tokens generated from text")
-            return nil
-        }
+        // Start server
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: python)
+        proc.arguments = [scriptPath]
+        proc.standardOutput = FileHandle.nullDevice
+        proc.standardError = FileHandle.nullDevice
+        serverProcess = proc
 
         do {
-            // Input: tokens as Int64 tensor [1, seq_len]
-            let tokenCount = tokens.count
-            let tokenData = NSMutableData(
-                bytes: tokens.map { Int64($0) },
-                length: tokenCount * MemoryLayout<Int64>.size
-            )
-            let tokenTensor = try ORTValue(
-                tensorData: tokenData,
-                elementType: .int64,
-                shape: [1, NSNumber(value: tokenCount)]
-            )
+            try proc.run()
+            log("LocalTTSService: Started Kokoro TTS server (PID \(proc.processIdentifier))")
 
-            // Style (voice embedding): Float32 tensor [1, 256]
-            let voiceEmb = getVoiceEmbedding(voice: voice) ?? [Float](repeating: 0.0, count: Self.voiceEmbeddingDim)
-            let styleData = NSMutableData(bytes: voiceEmb, length: voiceEmb.count * MemoryLayout<Float>.size)
-            let styleTensor = try ORTValue(
-                tensorData: styleData,
-                elementType: .float,
-                shape: [1, NSNumber(value: Self.voiceEmbeddingDim)]
-            )
+            // Wait for server to be ready
+            for _ in 0..<20 {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                if await checkHealth() {
+                    isServerRunning = true
+                    log("LocalTTSService: Kokoro TTS server ready")
+                    return
+                }
+            }
+            logError("LocalTTSService: Kokoro TTS server failed to start in time")
+        } catch {
+            logError("LocalTTSService: Failed to start Kokoro server", error: error)
+        }
+    }
 
-            // Speed: Float32 scalar
-            var speed: Float = 1.0
-            let speedData = NSMutableData(bytes: &speed, length: MemoryLayout<Float>.size)
-            let speedTensor = try ORTValue(
-                tensorData: speedData,
-                elementType: .float,
-                shape: [1] as [NSNumber]
-            )
+    private func checkHealth() async -> Bool {
+        guard let url = URL(string: "\(Self.baseURL)/health") else { return false }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 2
+        do {
+            let (_, response) = try await URLSession.shared.data(for: request)
+            return (response as? HTTPURLResponse)?.statusCode == 200
+        } catch {
+            return false
+        }
+    }
 
-            // Run inference
-            let outputs = try session.run(
-                withInputs: [
-                    "tokens": tokenTensor,
-                    "style": styleTensor,
-                    "speed": speedTensor,
-                ],
-                outputNames: Set(["audio"]),
-                runOptions: nil
-            )
+    // MARK: - Speech Generation
 
-            // Extract audio output
-            guard let audioValue = outputs["audio"] else {
-                logError("LocalTTSService: No audio output from model")
+    private func generateSpeech(text: String, voice: String) async -> Data? {
+        guard let url = URL(string: "\(Self.baseURL)/v1/audio/speech") else { return nil }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        // text field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"text\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(text)\r\n".data(using: .utf8)!)
+        // voice field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"voice\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(voice)\r\n".data(using: .utf8)!)
+        // speed field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"speed\"\r\n\r\n".data(using: .utf8)!)
+        body.append("1.0\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                logError("LocalTTSService: TTS server returned \(code)")
                 return nil
             }
 
-            let audioData = try audioValue.tensorData() as Data
-            log("LocalTTSService: Generated \(audioData.count) bytes of audio (\(String(format: "%.1f", Double(audioData.count / MemoryLayout<Float>.size) / Double(Self.sampleRate)))s)")
-            return audioData
+            // The response is a WAV file — extract raw PCM (skip 44-byte header)
+            guard data.count > 44 else {
+                logError("LocalTTSService: WAV too small (\(data.count) bytes)")
+                return nil
+            }
 
+            // Return the raw PCM data (skip WAV header) as float32
+            let pcmData = data.subdata(in: 44..<data.count)
+            // Convert 16-bit PCM to float32 for AVAudioEngine
+            let sampleCount = pcmData.count / 2
+            var floatData = Data(capacity: sampleCount * 4)
+            pcmData.withUnsafeBytes { rawBuffer in
+                let int16Ptr = rawBuffer.bindMemory(to: Int16.self)
+                for i in 0..<sampleCount {
+                    var sample = Float(int16Ptr[i]) / 32768.0
+                    withUnsafeBytes(of: &sample) { floatData.append(contentsOf: $0) }
+                }
+            }
+
+            log("LocalTTSService: Generated \(floatData.count) bytes (\(String(format: "%.1f", Float(sampleCount) / 24000.0))s)")
+            return floatData
         } catch {
-            logError("LocalTTSService: ONNX inference error", error: error)
+            logError("LocalTTSService: Speech generation failed", error: error)
             return nil
         }
-#else
+    }
+
+    // MARK: - Python Discovery
+
+    private func findPython() -> String? {
+        // Check venv first (same one MLX Whisper uses)
+        let venvPython = NSHomeDirectory() + "/Library/Application Support/VoiceAI/mlx-whisper-venv/bin/python3"
+        if FileManager.default.isExecutableFile(atPath: venvPython) {
+            return venvPython
+        }
+        let candidates = ["/opt/homebrew/bin/python3", "/usr/local/bin/python3", "/usr/bin/python3"]
+        for path in candidates {
+            if FileManager.default.isExecutableFile(atPath: path) { return path }
+        }
         return nil
-#endif
-    }
-
-    // MARK: - Text to Tokens (Phoneme Tokenization)
-
-    /// Convert English text to a sequence of phoneme token IDs for the Kokoro model.
-    /// This is a simplified tokenizer -- for production, integrate espeak-ng or a learned G2P model.
-    private func textToTokens(_ text: String) -> [Int] {
-        // Kokoro uses a character/phoneme-level vocabulary.
-        // For MVP, we use a simple character-level mapping that covers basic English.
-        // Token 0 is typically padding, token 1 is BOS, token 2 is EOS.
-        var tokens: [Int] = [1] // BOS
-
-        let normalized = text.lowercased()
-        for char in normalized {
-            if let tokenId = Self.charToToken[char] {
-                tokens.append(tokenId)
-            }
-            // Skip unknown characters silently
-        }
-
-        tokens.append(2) // EOS
-        return tokens
-    }
-
-    /// Basic character-to-token mapping for Kokoro.
-    /// This covers ASCII letters, digits, punctuation, and whitespace.
-    /// The actual Kokoro model uses IPA phonemes; a full implementation would
-    /// run espeak-ng or a G2P model to convert text to IPA first.
-    private static let charToToken: [Character: Int] = {
-        var map: [Character: Int] = [:]
-        // Space
-        map[" "] = 3
-        // Punctuation
-        map[","] = 4
-        map["."] = 5
-        map["!"] = 6
-        map["?"] = 7
-        map["-"] = 8
-        map[":"] = 9
-        map[";"] = 10
-        map["'"] = 11
-        map["\""] = 12
-
-        // Letters a-z starting at token 13
-        let letters = "abcdefghijklmnopqrstuvwxyz"
-        for (i, ch) in letters.enumerated() {
-            map[ch] = 13 + i
-        }
-
-        // Digits 0-9 starting at token 39
-        let digits = "0123456789"
-        for (i, ch) in digits.enumerated() {
-            map[ch] = 39 + i
-        }
-
-        return map
-    }()
-}
-
-// MARK: - Errors
-
-enum LocalTTSError: Error, CustomStringConvertible {
-    case onnxNotAvailable
-    case modelNotLoaded
-    case invalidDownloadURL(String)
-    case downloadFailed(String, Int)
-
-    var description: String {
-        switch self {
-        case .onnxNotAvailable:
-            return "ONNX Runtime is not available"
-        case .modelNotLoaded:
-            return "TTS model is not loaded"
-        case .invalidDownloadURL(let url):
-            return "Invalid download URL: \(url)"
-        case .downloadFailed(let file, let status):
-            return "Failed to download \(file): HTTP \(status)"
-        }
     }
 }

@@ -64,23 +64,43 @@ actor LocalTTSService {
     }
 
     /// Speak the given text using the specified voice.
+    /// Tries Kokoro ONNX first; falls back to macOS `say` command if unavailable.
     func speak(_ text: String, voice: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
+        // Try Kokoro ONNX first
         do {
             try await ensureModelLoaded()
+            if let audioData = generateAudio(text: trimmed, voice: voice) {
+                log("LocalTTSService: Playing Kokoro audio (\(audioData.count) bytes)")
+                player.play(audioData, sampleRate: Self.sampleRate)
+                return
+            }
         } catch {
-            logError("LocalTTSService: Failed to load model", error: error)
-            return
+            log("LocalTTSService: Kokoro unavailable (\(error.localizedDescription)), falling back to macOS say")
         }
 
-        guard let audioData = generateAudio(text: trimmed, voice: voice) else {
-            logError("LocalTTSService: Failed to generate audio for text")
-            return
-        }
+        // Fallback: macOS say command (always available, less natural voice)
+        await speakWithSay(trimmed)
+    }
 
-        player.play(audioData, sampleRate: Self.sampleRate)
+    /// Fallback TTS using macOS built-in `say` command.
+    private func speakWithSay(_ text: String) async {
+        log("LocalTTSService: Using macOS say fallback")
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/usr/bin/say")
+        // Use Samantha voice (best built-in English voice on macOS)
+        proc.arguments = ["-v", "Samantha", "-r", "190", text]
+        proc.standardOutput = FileHandle.nullDevice
+        proc.standardError = FileHandle.nullDevice
+
+        do {
+            try proc.run()
+            proc.waitUntilExit()
+        } catch {
+            logError("LocalTTSService: say command failed", error: error)
+        }
     }
 
     /// Stop current speech immediately.

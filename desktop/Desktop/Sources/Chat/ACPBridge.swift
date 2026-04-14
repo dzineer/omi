@@ -4,40 +4,16 @@ import Foundation
 /// This is the sole bridge for AI chat — supports both OMI's API key (passApiKey=true)
 /// and user's own Claude account via OAuth (passApiKey=false).
 /// Communication uses JSON lines over stdin/stdout pipes.
-actor ACPBridge {
+actor ACPBridge: ChatBridge {
 
   // MARK: - Types
 
-  /// Result from a query
-  struct QueryResult {
-    let text: String
-    let costUsd: Double
-    let sessionId: String
-    let inputTokens: Int
-    let outputTokens: Int
-    let cacheReadTokens: Int
-    let cacheWriteTokens: Int
-  }
-
-  /// Callback for streaming text deltas
   typealias TextDeltaHandler = @Sendable (String) -> Void
-
-  /// Callback for OMI tool calls that need Swift execution
   typealias ToolCallHandler = @Sendable (String, String, [String: Any]) async -> String
-
-  /// Callback for tool activity events (name, status, toolUseId?, input?)
   typealias ToolActivityHandler = @Sendable (String, String, String?, [String: Any]?) -> Void
-
-  /// Callback for thinking text deltas
   typealias ThinkingDeltaHandler = @Sendable (String) -> Void
-
-  /// Callback for tool result display (toolUseId, name, output)
   typealias ToolResultDisplayHandler = @Sendable (String, String, String) -> Void
-
-  /// Callback for auth required events (methods array, optional auth URL)
   typealias AuthRequiredHandler = @Sendable ([[String: Any]], String?) -> Void
-
-  /// Callback for auth success
   typealias AuthSuccessHandler = @Sendable () -> Void
 
   /// Inbound message types (Bridge → Swift, read from stdout)
@@ -158,17 +134,9 @@ actor ACPBridge {
       env["PATH"] = "\(nodeDir):\(existingPath)"
     }
 
-    // Playwright MCP extension mode
-    let defaults = UserDefaults.standard
-    let useExtension =
-      defaults.object(forKey: "playwrightUseExtension") == nil
-      || defaults.bool(forKey: "playwrightUseExtension")
-    if useExtension {
-      env["PLAYWRIGHT_USE_EXTENSION"] = "true"
-      if let token = defaults.string(forKey: "playwrightExtensionToken"), !token.isEmpty {
-        env["PLAYWRIGHT_MCP_EXTENSION_TOKEN"] = token
-      }
-    }
+    // Playwright disabled — no browser automation needed
+    env["PLAYWRIGHT_USE_EXTENSION"] = "false"
+    env.removeValue(forKey: "PLAYWRIGHT_MCP_EXTENSION_TOKEN")
 
     proc.environment = env
 
@@ -274,12 +242,6 @@ actor ACPBridge {
   /// Tell the bridge to pre-create ACP sessions in the background.
   /// This saves ~4s on the first query by doing session/new ahead of time.
   /// Pass multiple models to pre-warm sessions for both Opus and Sonnet in parallel.
-  struct WarmupSessionConfig {
-    let key: String
-    let model: String
-    let systemPrompt: String?
-  }
-
   func warmupSession(cwd: String? = nil, sessions: [WarmupSessionConfig]) {
     guard isRunning else { return }
     var dict: [String: Any] = ["type": "warmup"]
@@ -329,7 +291,7 @@ actor ACPBridge {
     onToolResultDisplay: @escaping ToolResultDisplayHandler = { _, _, _ in },
     onAuthRequired: @escaping AuthRequiredHandler = { _, _ in },
     onAuthSuccess: @escaping AuthSuccessHandler = {}
-  ) async throws -> QueryResult {
+  ) async throws -> ChatBridgeQueryResult {
     guard isRunning else {
       throw BridgeError.notRunning
     }
@@ -414,7 +376,7 @@ actor ACPBridge {
             case .result(
               let text, let sessionId, let costUsd, let inputTokens, let outputTokens,
               let cacheReadTokens, let cacheWriteTokens):
-              return QueryResult(
+              return ChatBridgeQueryResult(
                 text: text, costUsd: costUsd ?? 0, sessionId: sessionId, inputTokens: inputTokens,
                 outputTokens: outputTokens, cacheReadTokens: cacheReadTokens,
                 cacheWriteTokens: cacheWriteTokens)
@@ -431,7 +393,7 @@ actor ACPBridge {
             case .result(
               let text, let sessionId, let costUsd, let inputTokens, let outputTokens,
               let cacheReadTokens, let cacheWriteTokens):
-              return QueryResult(
+              return ChatBridgeQueryResult(
                 text: text, costUsd: costUsd ?? 0, sessionId: sessionId, inputTokens: inputTokens,
                 outputTokens: outputTokens, cacheReadTokens: cacheReadTokens,
                 cacheWriteTokens: cacheWriteTokens)
@@ -456,7 +418,7 @@ actor ACPBridge {
       case .result(
         let text, let sessionId, let costUsd, let inputTokens, let outputTokens,
         let cacheReadTokens, let cacheWriteTokens):
-        return QueryResult(
+        return ChatBridgeQueryResult(
           text: text, costUsd: costUsd ?? 0, sessionId: sessionId, inputTokens: inputTokens,
           outputTokens: outputTokens, cacheReadTokens: cacheReadTokens,
           cacheWriteTokens: cacheWriteTokens)

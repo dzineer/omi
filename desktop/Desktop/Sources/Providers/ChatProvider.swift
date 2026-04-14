@@ -92,7 +92,7 @@ enum ChatContentBlock: Identifiable {
 
     /// Human-friendly display name for a tool
     static func displayName(for toolName: String) -> String {
-        // Strip MCP prefix (e.g., "mcp__omi-tools__execute_sql" → "execute_sql")
+        // Strip MCP prefix (e.g., "mcp__vibeai-tools__execute_sql" → "execute_sql")
         let cleanName: String
         if toolName.hasPrefix("mcp__") {
             cleanName = String(toolName.split(separator: "__").last ?? Substring(toolName))
@@ -337,14 +337,27 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     /// When true, user can create multiple chat sessions
     @AppStorage("multiChatEnabled") var multiChatEnabled = false
 
-    // MARK: - Bridge (ACP-only, passApiKey controls OMI vs user's account)
+    // MARK: - Bridge (supports ACP or Claude Code engine)
     // NOTE: initialized lazily so it reads the persisted bridgeMode from UserDefaults,
-    // not always defaulting to Omi mode on cold start.
+    // not always defaulting to Vibe AI mode on cold start.
     private lazy var acpBridge: ACPBridge = {
         let isOmi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.omiAI.rawValue) != BridgeMode.userClaude.rawValue
         return ACPBridge(passApiKey: isOmi)
     }()
+    /// Claude Code engine bridge (used when useClaudeCodeEngine is enabled)
+    private lazy var claudeCodeBridge: ClaudeCodeBridge = {
+        let isOmi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.omiAI.rawValue) != BridgeMode.userClaude.rawValue
+        return ClaudeCodeBridge(passApiKey: isOmi)
+    }()
     private var acpBridgeStarted = false
+
+    /// Feature flag: when true, uses Claude Code CLI as the chat engine instead of ACP Bridge
+    @AppStorage("useClaudeCodeEngine") var useClaudeCodeEngine: Bool = false
+
+    /// Returns the active bridge based on the engine toggle
+    private var activeBridge: any ChatBridge {
+        useClaudeCodeEngine ? claudeCodeBridge : acpBridge
+    }
 
     enum BridgeMode: String {
         case omiAI = "agentSDK"
@@ -360,12 +373,12 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     @Published var claudeAuthUrl: String?
     /// Whether the user has a cached Claude OAuth token
     @Published var isClaudeConnected = false
-    /// Cumulative tokens used in the current session via Omi account
+    /// Cumulative tokens used in the current session via Vibe AI account
     @Published var sessionTokensUsed: Int = 0
-    /// Cumulative USD cost spent using the Omi account, persisted across sessions.
+    /// Cumulative USD cost spent using the Vibe AI account, persisted across sessions.
     /// Used to enforce the $50 threshold for auto-switching to the user's Claude account.
     @AppStorage("omiAICumulativeCostUsd") var omiAICumulativeCostUsd: Double = 0.0
-    /// Set to true when the $50 Omi account usage threshold is reached, triggering an alert.
+    /// Set to true when the $50 Vibe AI account usage threshold is reached, triggering an alert.
     @Published var showOmiThresholdAlert = false
 
     private let messagesPageSize = 50
@@ -495,14 +508,14 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                         return
                     }
                     guard self.acpBridgeStarted else { return }
-                    log("ChatProvider: Playwright extension setting changed, restarting ACP bridge")
+                    log("ChatProvider: Playwright extension setting changed, restarting bridge")
                     self.acpBridgeStarted = false
                     do {
-                        try await self.acpBridge.restart()
+                        try await self.activeBridge.restart()
                         self.acpBridgeStarted = true
-                        log("ChatProvider: ACP bridge restarted with new Playwright settings")
+                        log("ChatProvider: bridge restarted with new Playwright settings")
                     } catch {
-                        logError("Failed to restart ACP bridge after Playwright setting change", error: error)
+                        logError("Failed to restart bridge after Playwright setting change", error: error)
                     }
                 }
             }
@@ -515,14 +528,14 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                 self.groupedSessions = self.computeGroupedSessions()
             }
 
-        // Kill ACP bridge subprocess on app quit to prevent orphaned Node.js processes
+        // Kill bridge subprocess on app quit to prevent orphaned processes
         terminationObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                await self.acpBridge.stop()
+                await self.activeBridge.stop()
             }
         }
     }
@@ -541,13 +554,13 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         // Restart bridge to pick up new extension token
         acpBridgeStarted = false
         do {
-            try await acpBridge.restart()
+            try await activeBridge.restart()
             acpBridgeStarted = true
         } catch {
-            try await acpBridge.start()
+            try await activeBridge.start()
             acpBridgeStarted = true
         }
-        return try await acpBridge.testPlaywrightConnection()
+        return try await activeBridge.testPlaywrightConnection()
     }
 
     /// Whether we're currently in user's Claude account mode
@@ -555,22 +568,24 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         bridgeMode == BridgeMode.userClaude.rawValue
     }
 
-    /// Ensure the ACP bridge is started (restarts if the process died)
+    /// Ensure the active bridge is started (restarts if the process died)
     private func ensureBridgeStarted() async -> Bool {
+        let bridge = activeBridge
         if acpBridgeStarted {
-            let alive = await acpBridge.isAlive
+            let alive = await bridge.isAlive
             if !alive {
-                log("ChatProvider: ACP bridge process died, will restart")
+                log("ChatProvider: bridge process died, will restart")
                 acpBridgeStarted = false
             }
         }
         guard !acpBridgeStarted else { return true }
         do {
-            try await acpBridge.start()
+            try await bridge.start()
             acpBridgeStarted = true
-            log("ChatProvider: ACP bridge started successfully")
+            let engineName = useClaudeCodeEngine ? "Claude Code" : "ACP"
+            log("ChatProvider: \(engineName) bridge started successfully")
             // Set up global auth handlers so auth_required during warmup is handled
-            await acpBridge.setGlobalAuthHandlers(
+            await bridge.setGlobalAuthHandlers(
                 onAuthRequired: { [weak self] methods, authUrl in
                     Task { @MainActor [weak self] in
                         self?.claudeAuthMethods = methods
@@ -585,39 +600,40 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                     }
                 }
             )
-            // Pre-warm ACP sessions with their respective system prompts.
+            // Pre-warm sessions with their respective system prompts.
             // This is the only place the system prompt is built and applied.
             let mainSystemPrompt = buildSystemPrompt(contextString: formatMemoriesSection())
             cachedMainSystemPrompt = mainSystemPrompt
             let floatingSystemPrompt = Self.floatingBarSystemPromptPrefix + "\n\n" + mainSystemPrompt
-            await acpBridge.warmupSession(cwd: workingDirectory, sessions: [
+            await bridge.warmupSession(cwd: workingDirectory, sessions: [
                 .init(key: "main", model: "claude-opus-4-6", systemPrompt: mainSystemPrompt),
                 .init(key: "floating", model: "claude-sonnet-4-6", systemPrompt: floatingSystemPrompt)
             ])
             return true
         } catch {
-            logError("Failed to start ACP bridge", error: error)
+            logError("Failed to start bridge", error: error)
             errorMessage = "AI not available: \(error.localizedDescription)"
             return false
         }
     }
 
-    /// Switch between bridge modes (Omi AI vs user's Claude account)
+    /// Switch between bridge modes (Vibe AI vs user's Claude account)
     func switchBridgeMode(to mode: BridgeMode) async {
         // Compare against the actual running bridge state, not bridgeMode (@AppStorage updates
         // immediately when the Picker changes, so bridgeMode already equals `mode` by the time
         // this function is called — the old string comparison always exits early).
-        guard (mode == .omiAI) != acpBridge.passApiKey else { return }
+        guard (mode == .omiAI) != (await activeBridge.passApiKey) else { return }
         let oldMode = bridgeMode
         log("ChatProvider: Switching bridge mode from \(bridgeMode) to \(mode.rawValue)")
 
         // Stop the current bridge
-        await acpBridge.stop()
+        await activeBridge.stop()
         acpBridgeStarted = false
 
-        // Switch mode and recreate bridge with appropriate passApiKey
+        // Switch mode and recreate bridges with appropriate passApiKey
         bridgeMode = mode.rawValue
         acpBridge = ACPBridge(passApiKey: mode == .omiAI)
+        claudeCodeBridge = ClaudeCodeBridge(passApiKey: mode == .omiAI)
         AnalyticsManager.shared.chatBridgeModeChanged(from: oldMode, to: mode.rawValue)
 
         // Check Claude connection status when switching to user's Claude account
@@ -676,8 +692,8 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     func disconnectClaude() async {
         log("ChatProvider: Disconnecting Claude account")
 
-        // 1. Stop the ACP bridge
-        await acpBridge.stop()
+        // 1. Stop the active bridge
+        await activeBridge.stop()
         acpBridgeStarted = false
 
         // 2. Clear the OAuth token from config file
@@ -713,9 +729,10 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         // 4. Update state
         isClaudeConnected = false
 
-        // 5. Switch back to Omi AI mode and recreate bridge with API key
+        // 5. Switch back to Vibe AI mode and recreate bridge with API key
         bridgeMode = BridgeMode.omiAI.rawValue
         acpBridge = ACPBridge(passApiKey: true)
+        claudeCodeBridge = ClaudeCodeBridge(passApiKey: true)
     }
 
     // MARK: - Session Management
@@ -1378,17 +1395,17 @@ A screenshot may be attached — use it silently only if relevant. Never mention
 
     /// Initialize chat: fetch sessions and load messages
     func initialize() async {
-        // Seed cumulative Omi AI cost from backend now that auth is ready (background, no latency)
+        // Seed cumulative Vibe AI cost from backend now that auth is ready (background, no latency)
         Task.detached(priority: .background) { [weak self] in
             guard let serverCost = await APIClient.shared.fetchTotalOmiAICost() else { return }
             guard let self else { return }
             await MainActor.run {
                 // Always trust the server value — it's the authoritative total
                 self.omiAICumulativeCostUsd = serverCost
-                log("ChatProvider: Seeded Omi AI cumulative cost from backend: $\(String(format: "%.4f", serverCost))")
+                log("ChatProvider: Seeded Vibe AI cumulative cost from backend: $\(String(format: "%.4f", serverCost))")
                 // Auto-switch if already over threshold on startup
                 if self.bridgeMode == BridgeMode.omiAI.rawValue && serverCost >= 50.0 {
-                    log("ChatProvider: Omi AI cost already at $\(String(format: "%.2f", serverCost)) on startup — switching to user Claude account")
+                    log("ChatProvider: Vibe AI cost already at $\(String(format: "%.2f", serverCost)) on startup — switching to user Claude account")
                     self.showOmiThresholdAlert = true
                     Task { await self.switchBridgeMode(to: .userClaude) }
                 }
@@ -1745,7 +1762,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         guard isSending else { return }
         isStopping = true
         Task {
-            await acpBridge.interrupt()
+            await activeBridge.interrupt()
         }
         // Result flows back normally through the bridge with partial text
     }
@@ -1792,7 +1809,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         // When sendMessage finishes (due to the interrupt), it checks
         // pendingFollowUpText and chains a new full query automatically.
         pendingFollowUpText = trimmedText
-        await acpBridge.interrupt()
+        await activeBridge.interrupt()
         log("ChatProvider: follow-up queued, interrupt sent")
     }
 
@@ -1821,7 +1838,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
             return
         }
 
-        // Guard: Block query if Omi account $50 usage threshold already reached
+        // Guard: Block query if Vibe AI account $50 usage threshold already reached
         if bridgeMode == BridgeMode.omiAI.rawValue && omiAICumulativeCostUsd >= 50.0 {
             showOmiThresholdAlert = true
             Task { await self.switchBridgeMode(to: .userClaude) }
@@ -1924,19 +1941,18 @@ A screenshot may be attached — use it silently only if relevant. Never mention
             }
 
             // Query the active bridge with streaming
-            // Callbacks for ACP bridge
-            let textDeltaHandler: ACPBridge.TextDeltaHandler = { [weak self] delta in
+            let textDeltaHandler: @Sendable (String) -> Void = { [weak self] delta in
                 Task { @MainActor [weak self] in
                     self?.appendToMessage(id: aiMessageId, text: delta)
                 }
             }
-            let toolCallHandler: ACPBridge.ToolCallHandler = { callId, name, input in
+            let toolCallHandler: @Sendable (String, String, [String: Any]) async -> String = { callId, name, input in
                 let toolCall = ToolCall(name: name, arguments: input, thoughtSignature: nil)
                 let result = await ChatToolExecutor.execute(toolCall)
                 log("OMI tool \(name) executed for callId=\(callId)")
                 return result
             }
-            let toolActivityHandler: ACPBridge.ToolActivityHandler = { [weak self] name, status, toolUseId, input in
+            let toolActivityHandler: @Sendable (String, String, String?, [String: Any]?) -> Void = { [weak self] name, status, toolUseId, input in
                 Task { @MainActor [weak self] in
                     self?.addToolActivity(
                         messageId: aiMessageId,
@@ -1962,18 +1978,18 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                     }
                 }
             }
-            let thinkingDeltaHandler: ACPBridge.ThinkingDeltaHandler = { [weak self] text in
+            let thinkingDeltaHandler: @Sendable (String) -> Void = { [weak self] text in
                 Task { @MainActor [weak self] in
                     self?.appendThinking(messageId: aiMessageId, text: text)
                 }
             }
-            let toolResultDisplayHandler: ACPBridge.ToolResultDisplayHandler = { [weak self] toolUseId, name, output in
+            let toolResultDisplayHandler: @Sendable (String, String, String) -> Void = { [weak self] toolUseId, name, output in
                 Task { @MainActor [weak self] in
                     self?.addToolResult(messageId: aiMessageId, toolUseId: toolUseId, name: name, output: output)
                 }
             }
 
-            let queryResult = try await acpBridge.query(
+            let queryResult = try await activeBridge.query(
                 prompt: trimmedText,
                 systemPrompt: systemPrompt,
                 sessionKey: isOnboarding ? "onboarding" : (sessionKey ?? "main"),
@@ -2102,7 +2118,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                         costUsd: r.costUsd
                     )
                 }
-                // Auto-switch to the user's Claude account when the $50 Omi usage threshold is reached
+                // Auto-switch to the user's Claude account when the $50 Vibe AI usage threshold is reached
                 if omiAICumulativeCostUsd >= 50.0 {
                     showOmiThresholdAlert = true
                     Task { await self.switchBridgeMode(to: .userClaude) }
@@ -2118,7 +2134,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
             // On timeout, cancel the stuck ACP session so it's not left dangling
             if let bridgeError = error as? BridgeError, case .timeout = bridgeError {
                 log("ChatProvider: ACP query timed out, sending interrupt to cancel stuck session")
-                await acpBridge.interrupt()
+                await activeBridge.interrupt()
             }
 
             // Flush any remaining buffered streaming text before handling the error

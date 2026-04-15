@@ -12,6 +12,7 @@ class ViewModelContainer: ObservableObject {
     let tasksViewModel = TasksViewModel()
     let appProvider = AppProvider()
     let memoriesViewModel = MemoriesViewModel()
+    let knowledgeViewModel = KnowledgeViewModel()
     let chatProvider: ChatProvider
     let taskChatCoordinator: TaskChatCoordinator
     let voiceManager: VoiceConversationManager

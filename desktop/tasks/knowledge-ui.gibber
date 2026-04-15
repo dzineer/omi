@@ -1,0 +1,31 @@
+---
+id: KNOWLEDGE001
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:KNOWLEDGE001
+  §status:§done
+  §owner:§ai
+  §title:"Wire Knowledge page to Eidetic Memory backend"
+  §goal:(§replace §old §firestore-memories §page
+    §with §local §eidetic §knowledge §graph)
+
+  §done:[
+    (§task §id:KNOWLEDGE001.1 §status:§done
+      §result:(§created §KnowledgeViewModel §class
+        §with:[§loadStatus §search §save]
+        §calls §localhost:8080/api/memory §endpoints))
+    (§task §id:KNOWLEDGE001.2 §status:§done
+      §result:(§created §KnowledgePage §view
+        §with:[§search-bar §room-chips §memory-list §stats-header §save-popover]
+        §shows §node-count §edge-count §embedding-count §rooms))
+    (§task §id:KNOWLEDGE001.3 §status:§done
+      §result:(§wired §KnowledgePage §into §DesktopHomeView §at §index-3
+        §added §KnowledgeViewModel §to §ViewModelContainer
+        §replaces §MemoriesPage))]
+
+  §result:(§knowledge §page §fully §wired §to §eidetic §memory
+    §search → §hybrid §recall §from §local §graph
+    §stats → §node §edge §embedding §room §counts
+    §save → §manual §memory §input
+    §compiles:§clean §zero-errors))

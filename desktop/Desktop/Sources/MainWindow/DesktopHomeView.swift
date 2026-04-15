@@ -532,7 +532,7 @@ private struct PageContentView: View {
             case 2:
                 ChatPage(appProvider: viewModelContainer.appProvider, chatProvider: viewModelContainer.chatProvider, voiceManager: viewModelContainer.voiceManager)
             case 3:
-                MemoriesPage(viewModel: viewModelContainer.memoriesViewModel)
+                KnowledgePage(viewModel: viewModelContainer.knowledgeViewModel)
             case 4:
                 TasksPage(viewModel: viewModelContainer.tasksViewModel, chatCoordinator: viewModelContainer.taskChatCoordinator, chatProvider: viewModelContainer.chatProvider)
             case 5:

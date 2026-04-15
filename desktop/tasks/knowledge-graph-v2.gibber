@@ -34,5 +34,21 @@ gibber_dict: meta/v2, omi-stt
         §room-labels §float §near §clusters
         §smooth §spring §animation §on §layout-changes))]
 
-  §refs:["D3.js force layout", "vis.js network", "Apple SceneKit for 3D option"]
+    (§task §id:KNOWLEDGE003.4
+      §goal:(§add §drill-down §navigation
+        §double-click §node → §expand §into §sub-graph
+        §show §all §connected §memories §not §just §top-level
+        §breadcrumb §trail §to §navigate §back)
+      §notes:"Double-click a node to zoom in and see everything connected to it. Show the full depth of memory — related concepts, sub-topics, linked facts. Breadcrumb at top: All > Voice > MLX Whisper > ... for navigation back.")
+
+    (§task §id:KNOWLEDGE003.5
+      §goal:(§remove §flat §record §list
+        §everything §is §graph §nodes §not §database §rows
+        §no §flat §list §of §text §records
+        §only §graph §visualization §with §drill-down)
+      §notes:"The current flat list of text records is useless. ALL content should be in the graph. Records are nodes. Clicking/double-clicking a node reveals its content, connections, and sub-graph. No separate list view.")]
+
+  §risk:["User explicitly hates the flat record list — must be graph-only"
+         "Double-click drill-down is critical — not optional"]
+  §refs:["D3.js force layout", "vis.js network", "Apple SceneKit for 3D option", "Obsidian graph view"]
   §budget:(§time<3h))

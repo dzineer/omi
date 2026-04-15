@@ -29,13 +29,13 @@ substep() {
 }
 
 # App configuration
-BINARY_NAME="Omi Computer"  # Package.swift target — binary paths, pkill, CFBundleExecutable
-APP_NAME="Omi Dev"
-BUNDLE_ID="com.omi.desktop-dev"
+BINARY_NAME="Vibe AI"  # Package.swift target — binary paths, pkill, CFBundleExecutable
+APP_NAME="Vibe AI Dev"
+BUNDLE_ID="com.vibeaiglobal.vibeai-dev"
 BUILD_DIR="build"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 APP_PATH="/Applications/$APP_NAME.app"
-SIGN_IDENTITY="${OMI_SIGN_IDENTITY:-}"
+SIGN_IDENTITY="${VIBEAI_SIGN_IDENTITY:-${OMI_SIGN_IDENTITY:-}}"
 
 # Backend configuration (Rust)
 BACKEND_DIR="$(dirname "$0")/Backend-Rust"
@@ -64,7 +64,7 @@ touch $AUTH_DEBUG_LOG
 step "Killing existing instances..."
 auth_debug "BEFORE pkill: auth_isSignedIn=$(defaults read "$BUNDLE_ID" auth_isSignedIn 2>&1 || true)"
 auth_debug "BEFORE pkill: ALL_KEYS=$(defaults read "$BUNDLE_ID" 2>&1 | grep -E 'auth_|hasCompleted|hasLaunched|currentTier|userShow' || true)"
-# Only kill the dev app — never touch Omi Beta (production)
+# Only kill the dev app — never touch Vibe AI (production)
 pkill -f "$APP_NAME.app" 2>/dev/null || true
 pkill -f "cloudflared.*omi-computer-dev" 2>/dev/null || true
 # Kill only the Rust backend on port 8080 (not other apps that might use it)
@@ -82,8 +82,9 @@ rm -f /tmp/omi-dev.log 2>/dev/null || true
 
 step "Cleaning up conflicting app bundles..."
 # Clean old build names from local build dir
-rm -rf "$BUILD_DIR/Omi Computer.app" 2>/dev/null
+rm -rf "$BUILD_DIR/Vibe AI.app" "$BUILD_DIR/Omi Computer.app" 2>/dev/null
 CONFLICTING_APPS=(
+    # Old Omi installations (cleanup)
     "/Applications/Omi Computer.app"
     "/Applications/Omi.app/Contents/MacOS/Omi Computer.app"
     "/Applications/Omi.app"
@@ -93,6 +94,13 @@ CONFLICTING_APPS=(
     "$HOME/Downloads/Omi Dev.app"
     "$(dirname "$0")/../app/build/macos/Build/Products/Debug/Omi.app"
     "$(dirname "$0")/../app/build/macos/Build/Products/Release/Omi.app"
+    # New Vibe AI installations
+    "/Applications/Vibe AI.app/Contents/MacOS/Vibe AI.app"
+    "/Applications/Vibe AI.app"
+    "$HOME/Desktop/Vibe AI.app"
+    "$HOME/Desktop/Vibe AI Dev.app"
+    "$HOME/Downloads/Vibe AI.app"
+    "$HOME/Downloads/Vibe AI Dev.app"
 )
 for app in "${CONFLICTING_APPS[@]}"; do
     if [ -d "$app" ]; then
@@ -100,11 +108,12 @@ for app in "${CONFLICTING_APPS[@]}"; do
         rm -rf "$app"
     fi
 done
-# Also remove any "Omi Computer.app" nested inside Flutter builds (any config: Debug/Release/Release-prod/etc.)
+# Also remove any "Vibe AI.app" or old "Omi Computer.app" nested inside Flutter builds (any config: Debug/Release/Release-prod/etc.)
 find "$(dirname "$0")/../app/build" -name "Omi Computer.app" -type d -exec rm -rf {} + 2>/dev/null || true
-# Kill stale "Omi Dev.app" bundles from other repo clones (e.g. ~/omi-desktop/)
-# These confuse LaunchServices and get launched instead of /Applications/Omi Dev.app
-find "$HOME" -maxdepth 4 -name "Omi Dev.app" -type d -not -path "$APP_BUNDLE" -not -path "$APP_PATH" 2>/dev/null | while read stale; do
+find "$(dirname "$0")/../app/build" -name "Vibe AI.app" -type d -exec rm -rf {} + 2>/dev/null || true
+# Kill stale "Vibe AI Dev.app" and old "Omi Dev.app" bundles from other repo clones (e.g. ~/omi-desktop/)
+# These confuse LaunchServices and get launched instead of /Applications/Vibe AI Dev.app
+find "$HOME" -maxdepth 4 \( -name "Omi Dev.app" -o -name "Vibe AI Dev.app" \) -type d -not -path "$APP_BUNDLE" -not -path "$APP_PATH" 2>/dev/null | while read stale; do
     substep "Removing stale clone: $stale"
     rm -rf "$stale"
 done
@@ -207,12 +216,12 @@ cp -f Desktop/Info.plist "$APP_BUNDLE/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleExecutable $BINARY_NAME" "$APP_BUNDLE/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$APP_BUNDLE/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $APP_NAME" "$APP_BUNDLE/Contents/Info.plist"
-/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName $APP_NAME" "$APP_BUNDLE/Contents/Info.plist"
-/usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:0:CFBundleURLSchemes:0 omi-computer-dev" "$APP_BUNDLE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName VibeAi" "$APP_BUNDLE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:0:CFBundleURLSchemes:0 vibeai-dev" "$APP_BUNDLE/Contents/Info.plist"
 
 auth_debug "AFTER plist edits: auth_isSignedIn=$(defaults read "$BUNDLE_ID" auth_isSignedIn 2>&1 || true)"
 
-substep "Copying GoogleService-Info.plist (dev version for com.omi.desktop-dev)"
+substep "Copying GoogleService-Info.plist (dev version for com.vibeaiglobal.vibeai-dev)"
 if [ -f "Desktop/Sources/GoogleService-Info-Dev.plist" ]; then
     cp -f Desktop/Sources/GoogleService-Info-Dev.plist "$APP_BUNDLE/Contents/Resources/GoogleService-Info.plist"
 else
@@ -220,7 +229,7 @@ else
 fi
 
 # Copy resource bundle (contains app assets like permissions.gif, herologo.png, etc.)
-RESOURCE_BUNDLE="Desktop/.build/arm64-apple-macosx/debug/Omi Computer_Omi Computer.bundle"
+RESOURCE_BUNDLE="Desktop/.build/arm64-apple-macosx/debug/Vibe AI_Vibe AI.bundle"
 if [ -d "$RESOURCE_BUNDLE" ]; then
     substep "Copying resource bundle ($(du -sh "$RESOURCE_BUNDLE" 2>/dev/null | cut -f1))"
     cp -Rf "$RESOURCE_BUNDLE" "$APP_BUNDLE/Contents/Resources/"
@@ -245,7 +254,7 @@ fi
 echo "OMI_API_URL=$TUNNEL_URL" >> "$APP_BUNDLE/Contents/Resources/.env"
 
 substep "Copying app icon"
-cp -f omi_icon.icns "$APP_BUNDLE/Contents/Resources/OmiIcon.icns" 2>/dev/null || true
+cp -f vibeai_icon.icns "$APP_BUNDLE/Contents/Resources/VibeAIIcon.icns" 2>/dev/null || true
 
 substep "Creating PkgInfo"
 echo -n "APPL????" > "$APP_BUNDLE/Contents/PkgInfo"
@@ -286,13 +295,13 @@ if [ -n "$SIGN_IDENTITY" ]; then
     fi
     # Sign the bundled node binary with developer identity + Node.entitlements
     # (macOS requires executables inside app bundles to be properly signed)
-    NODE_BIN="$APP_BUNDLE/Contents/Resources/Omi Computer_Omi Computer.bundle/node"
+    NODE_BIN="$APP_BUNDLE/Contents/Resources/Vibe AI_Vibe AI.bundle/node"
     if [ -f "$NODE_BIN" ]; then
         substep "Signing bundled node binary"
         codesign --force --options runtime --entitlements Desktop/Node.entitlements --sign "$SIGN_IDENTITY" "$NODE_BIN"
     fi
     substep "Signing app bundle"
-    codesign --force --options runtime --entitlements Desktop/Omi.entitlements --sign "$SIGN_IDENTITY" "$APP_BUNDLE"
+    codesign --force --options runtime --entitlements Desktop/VibeAI.entitlements --sign "$SIGN_IDENTITY" "$APP_BUNDLE"
 else
     substep "Warning: No signing identity found. Using ad-hoc (permissions will reset each build)."
     codesign --force --deep --sign - "$APP_BUNDLE"
@@ -318,7 +327,7 @@ $LSREGISTER -u "$APP_PATH" 2>/dev/null || true
 # Purge stale registrations from old DMG staging dirs and unmounted volumes
 # These create ghost entries that can cause notification icons to show a
 # generic folder instead of the app icon
-for stale in /private/tmp/omi-dmg-staging-*/Omi\ Beta.app; do
+for stale in /private/tmp/omi-dmg-staging-*/Vibe\ AI.app /private/tmp/omi-dmg-staging-*/Omi\ Beta.app; do
     [ -d "$stale" ] || $LSREGISTER -u "$stale" 2>/dev/null || true
 done
 # Register the /Applications/ copy as the canonical bundle for this bundle ID

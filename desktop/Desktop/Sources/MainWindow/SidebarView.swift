@@ -20,35 +20,35 @@ enum SidebarNavItem: Int, CaseIterable {
         switch self {
         case .dashboard: return "Dashboard"
         case .conversations: return "Conversations"
-        case .chat: return "AI chat"
-        case .memories: return "Memories"
+        case .chat: return "Command"
+        case .memories: return "Knowledge"
         case .tasks: return "Tasks"
         case .focus: return "Focus"
         case .advice: return "Advice"
         case .rewind: return "Rewind"
-        case .apps: return "Apps"
+        case .apps: return "Playground"
         case .settings: return "Settings"
         case .permissions: return "Permissions"
         case .device: return "Device"
-        case .help: return "Help from Founder"
+        case .help: return "Help"
         }
     }
 
     var icon: String {
         switch self {
-        case .dashboard: return "house.fill"
+        case .dashboard: return "square.grid.2x2.fill"
         case .conversations: return "text.bubble.fill"
-        case .chat: return "bubble.left.and.bubble.right.fill"
-        case .memories: return "brain"
+        case .chat: return "terminal.fill"
+        case .memories: return "brain.fill"
         case .tasks: return "checklist"
         case .focus: return "eye.fill"
         case .advice: return "lightbulb.fill"
         case .rewind: return "clock.arrow.circlepath"
-        case .apps: return "puzzlepiece.fill"
+        case .apps: return "play.circle.fill"
         case .settings: return "gearshape.fill"
         case .permissions: return "exclamationmark.triangle.fill"
         case .device: return "wave.3.right.circle.fill"
-        case .help: return "bubble.left.fill"
+        case .help: return "questionmark.circle.fill"
         }
     }
 
@@ -67,7 +67,7 @@ enum SidebarNavItem: Int, CaseIterable {
 
     /// Items shown in the main navigation (top section)
     static var mainItems: [SidebarNavItem] {
-        [.dashboard, .chat, .memories, .tasks, .rewind, .apps]
+        [.dashboard, .chat, .memories, .tasks]
     }
 }
 
@@ -273,30 +273,17 @@ struct SidebarView: View {
                     // Subscription upgrade banner
                     // upgradeToPro
 
-                    // Device status widget (when device paired/connected)
+                    // Device status (only when connected)
                     if deviceProvider.isConnected || deviceProvider.pairedDevice != nil {
                         Spacer().frame(height: 12)
                         deviceStatusWidget
-                    }
-
-                    // Get Omi promo widget (dismissible sales link)
-                    if showGetOmiWidget {
-                        Spacer().frame(height: 12)
-                        getOmiWidget
-                    }
-
-                    // Update available widget
-                    if updaterViewModel.updateAvailable {
-                        Spacer().frame(height: 12)
-                        updateAvailableWidget
-                            .transition(.opacity)
                     }
 
                     Spacer().frame(height: 16)
 
                     // Divider before secondary items
                     Rectangle()
-                        .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                        .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
                         .frame(height: 1)
 
                     Spacer().frame(height: 12)
@@ -305,36 +292,6 @@ struct SidebarView: View {
                     if appState.hasMissingPermissions {
                         permissionWarningButton
                     }
-
-                    // Secondary navigation items
-                    if currentTierLevel == 0 || currentTierLevel >= 4 {
-                        BottomNavItemView(
-                            icon: "gift.fill",
-                            label: "Refer a Friend",
-                            isCollapsed: isCollapsed,
-                            iconWidth: iconWidth,
-                            onTap: {
-                                if let url = URL(string: "https://affiliate.omi.me") {
-                                    NSWorkspace.shared.open(url)
-                                }
-                            }
-                        )
-                    }
-
-                    // Help from Founder - navigates to Crisp chat page
-                    NavItemView(
-                        icon: SidebarNavItem.help.icon,
-                        label: SidebarNavItem.help.title,
-                        isSelected: selectedIndex == SidebarNavItem.help.rawValue,
-                        isCollapsed: isCollapsed,
-                        iconWidth: iconWidth,
-                        badge: crispManager.unreadCount,
-                        onTap: {
-                            selectedIndex = SidebarNavItem.help.rawValue
-                            crispManager.markAsRead()
-                            AnalyticsManager.shared.tabChanged(tabName: SidebarNavItem.help.title)
-                        }
-                    )
 
                     // Settings at the very bottom
                     NavItemView(
@@ -468,7 +425,7 @@ struct SidebarView: View {
     // MARK: - Header Section (Logo + Collapse Button on same row)
     private var headerSection: some View {
         HStack(spacing: 12) {
-            // Omi logo icon - using the herologo from Resources
+            // Vibe AI logo icon - using the herologo from Resources
             if let logoImage = NSImage(contentsOf: Bundle.resourceBundle.url(forResource: "herologo", withExtension: "png")!) {
                 Image(nsImage: logoImage)
                     .resizable()
@@ -478,15 +435,15 @@ struct SidebarView: View {
                 // Fallback SF Symbol
                 Image(systemName: "circle.fill")
                     .scaledFont(size: 17)
-                    .foregroundColor(OmiColors.purplePrimary)
+                    .foregroundColor(VibeAIColors.purplePrimary)
                     .frame(width: iconWidth)
             }
 
             if !isCollapsed {
                 // Brand name
-                Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Omi")
+                Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "VibeAi")
                     .scaledFont(size: 22, weight: .bold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                     .tracking(-0.5)
 
                 Spacer()
@@ -499,7 +456,7 @@ struct SidebarView: View {
                 }) {
                     Image(systemName: "sidebar.left")
                         .scaledFont(size: 17)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
                 .buttonStyle(.plain)
                 .help("Collapse sidebar")
@@ -521,7 +478,7 @@ struct SidebarView: View {
         }) {
             Image(systemName: "sidebar.left")
                 .scaledFont(size: 17)
-                .foregroundColor(OmiColors.textTertiary)
+                .foregroundColor(VibeAIColors.textTertiary)
                 .frame(width: iconWidth)
         }
         .buttonStyle(.plain)
@@ -533,15 +490,15 @@ struct SidebarView: View {
     private var proBadge: some View {
         Text("Pro")
             .scaledFont(size: 11, weight: .semibold)
-            .foregroundColor(OmiColors.purplePrimary)
+            .foregroundColor(VibeAIColors.purplePrimary)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(OmiColors.purplePrimary.opacity(0.15))
+                    .fill(VibeAIColors.purplePrimary.opacity(0.15))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(OmiColors.purplePrimary.opacity(0.3), lineWidth: 1)
+                            .stroke(VibeAIColors.purplePrimary.opacity(0.3), lineWidth: 1)
                     )
             )
     }
@@ -571,7 +528,7 @@ struct SidebarView: View {
 //            .padding(.vertical, 11)
 //            .background(
 //                RoundedRectangle(cornerRadius: 10)
-//                    .fill(OmiColors.purpleGradient)
+//                    .fill(VibeAIColors.purpleGradient)
 //            )
 //        }
 //        .buttonStyle(.plain)
@@ -596,7 +553,7 @@ struct SidebarView: View {
                     // Fallback SF Symbol
                     Image(systemName: "wave.3.right.circle.fill")
                         .scaledFont(size: 17)
-                        .foregroundColor(OmiColors.purplePrimary)
+                        .foregroundColor(VibeAIColors.purplePrimary)
                         .frame(width: iconWidth)
                 }
 
@@ -605,11 +562,11 @@ struct SidebarView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Get Omi Device")
                             .scaledFont(size: 13, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text("Your wearable AI companion")
                             .scaledFont(size: 11)
-                            .foregroundColor(OmiColors.textTertiary.opacity(0.8))
+                            .foregroundColor(VibeAIColors.textTertiary.opacity(0.8))
                     }
 
                     Spacer()
@@ -621,7 +578,7 @@ struct SidebarView: View {
                     }) {
                         Image(systemName: "xmark")
                             .scaledFont(size: 10, weight: .medium)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                             .padding(6)
                     }
                     .buttonStyle(.plain)
@@ -632,10 +589,10 @@ struct SidebarView: View {
             .padding(.vertical, 11)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(OmiColors.backgroundTertiary.opacity(0.6))
+                    .fill(VibeAIColors.backgroundTertiary.opacity(0.6))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
-                            .stroke(OmiColors.backgroundQuaternary.opacity(0.3), lineWidth: 1)
+                            .stroke(VibeAIColors.backgroundQuaternary.opacity(0.3), lineWidth: 1)
                     )
             )
         }
@@ -680,9 +637,9 @@ struct SidebarView: View {
             .padding(.vertical, 11)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(OmiColors.purplePrimary)
+                    .fill(VibeAIColors.purplePrimary)
             )
-            .shadow(color: OmiColors.purplePrimary.opacity(updateGlowAnimating ? 0.7 : 0.3), radius: 8)
+            .shadow(color: VibeAIColors.purplePrimary.opacity(updateGlowAnimating ? 0.7 : 0.3), radius: 8)
         }
         .buttonStyle(.plain)
         .help(isCollapsed ? "Update Available — click to install" : "")
@@ -712,7 +669,7 @@ struct SidebarView: View {
                     } else {
                         Image(systemName: "wave.3.right.circle.fill")
                             .scaledFont(size: 17)
-                            .foregroundColor(deviceProvider.isConnected ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                            .foregroundColor(deviceProvider.isConnected ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
                             .frame(width: iconWidth)
                     }
 
@@ -729,7 +686,7 @@ struct SidebarView: View {
                         if let device = deviceProvider.connectedDevice ?? deviceProvider.pairedDevice {
                             Text(device.displayName)
                                 .scaledFont(size: 13, weight: .semibold)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
                                 .lineLimit(1)
 
                             HStack(spacing: 6) {
@@ -760,7 +717,7 @@ struct SidebarView: View {
 
                     Image(systemName: "chevron.right")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
             }
             .padding(.horizontal, 12)
@@ -768,13 +725,13 @@ struct SidebarView: View {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(selectedIndex == SidebarNavItem.device.rawValue
-                          ? OmiColors.backgroundTertiary.opacity(0.8)
-                          : OmiColors.backgroundTertiary.opacity(0.6))
+                          ? VibeAIColors.backgroundTertiary.opacity(0.8)
+                          : VibeAIColors.backgroundTertiary.opacity(0.6))
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(deviceProvider.isConnected
                                     ? Color.green.opacity(0.3)
-                                    : OmiColors.backgroundQuaternary.opacity(0.3), lineWidth: 1)
+                                    : VibeAIColors.backgroundQuaternary.opacity(0.3), lineWidth: 1)
                     )
             )
         }
@@ -858,7 +815,7 @@ struct SidebarView: View {
         let isBroken = appState.isScreenCaptureKitBroken  // TCC yes but SCK no
         let isStale = appState.isScreenRecordingStale  // Developer signing changed
         let needsReset = isBroken  // Show reset when broken (not stale — stale needs toggle off/on)
-        let color: Color = (isDenied || isBroken || isStale) ? .red : OmiColors.warning
+        let color: Color = (isDenied || isBroken || isStale) ? .red : VibeAIColors.warning
 
         return HStack(spacing: 8) {
             Image(systemName: (isDenied || isBroken || isStale) ? "rectangle.on.rectangle.slash" : "rectangle.on.rectangle")
@@ -921,7 +878,7 @@ struct SidebarView: View {
 
     private var microphonePermissionRow: some View {
         let isDenied = appState.isMicrophonePermissionDenied()
-        let color: Color = isDenied ? .red : OmiColors.warning
+        let color: Color = isDenied ? .red : VibeAIColors.warning
 
         return HStack(spacing: 8) {
             Image(systemName: isDenied ? "mic.slash.fill" : "mic.fill")
@@ -977,7 +934,7 @@ struct SidebarView: View {
         let isDenied = appState.isNotificationPermissionDenied()
         let isBannerDisabled = appState.isNotificationBannerDisabled
         let needsAttention = isDenied || isBannerDisabled
-        let color: Color = needsAttention ? OmiColors.warning : OmiColors.warning
+        let color: Color = needsAttention ? VibeAIColors.warning : VibeAIColors.warning
 
         return HStack(spacing: 8) {
             Image(systemName: isDenied ? "bell.slash.fill" : (isBannerDisabled ? "bell.badge.slash.fill" : "bell.fill"))
@@ -1038,7 +995,7 @@ struct SidebarView: View {
         let isDenied = appState.isAccessibilityPermissionDenied()
         let isBroken = appState.isAccessibilityBroken  // TCC yes but AX calls fail
         let needsReset = isBroken  // Show reset when broken
-        let color: Color = (isDenied || isBroken) ? .red : OmiColors.warning
+        let color: Color = (isDenied || isBroken) ? .red : VibeAIColors.warning
 
         return HStack(spacing: 8) {
             Image(systemName: (isDenied || isBroken) ? "hand.raised.slash.fill" : "hand.raised.fill")
@@ -1251,7 +1208,7 @@ struct NavItemView: View {
     @State private var isLockHovered = false
 
     /// Foreground color for icon and text when locked
-    private var lockedColor: Color { OmiColors.textQuaternary.opacity(0.45) }
+    private var lockedColor: Color { VibeAIColors.textQuaternary.opacity(0.45) }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -1263,7 +1220,7 @@ struct NavItemView: View {
                 } else {
                     Image(systemName: icon)
                         .scaledFont(size: 17)
-                        .foregroundColor(isLocked ? lockedColor : (isSelected ? OmiColors.textPrimary : OmiColors.textTertiary))
+                        .foregroundColor(isLocked ? lockedColor : (isSelected ? VibeAIColors.textPrimary : VibeAIColors.textTertiary))
                         .frame(width: iconWidth)
                 }
 
@@ -1271,7 +1228,7 @@ struct NavItemView: View {
                 if badge > 0 && !isLocked {
                     if isCollapsed {
                         Circle()
-                            .fill(OmiColors.purplePrimary)
+                            .fill(VibeAIColors.purplePrimary)
                             .frame(width: 8, height: 8)
                             .offset(x: 4, y: -4)
                     } else {
@@ -1279,7 +1236,7 @@ struct NavItemView: View {
                             .font(.system(size: 9, weight: .bold))
                             .foregroundColor(.white)
                             .frame(minWidth: 14, minHeight: 14)
-                            .background(OmiColors.purplePrimary)
+                            .background(VibeAIColors.purplePrimary)
                             .clipShape(Circle())
                             .offset(x: 6, y: -6)
                     }
@@ -1303,7 +1260,7 @@ struct NavItemView: View {
             if !isCollapsed {
                 Text(label)
                     .scaledFont(size: 14, weight: isSelected ? .medium : .regular)
-                    .foregroundColor(isLocked ? lockedColor : (isSelected ? OmiColors.textPrimary : OmiColors.textSecondary))
+                    .foregroundColor(isLocked ? lockedColor : (isSelected ? VibeAIColors.textPrimary : VibeAIColors.textSecondary))
 
                 Spacer()
 
@@ -1328,8 +1285,8 @@ struct NavItemView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(isLocked ? Color.clear : (isSelected
-                      ? OmiColors.backgroundTertiary.opacity(0.8)
-                      : (isHovered ? OmiColors.backgroundTertiary.opacity(0.5) : Color.clear)))
+                      ? VibeAIColors.backgroundTertiary.opacity(0.8)
+                      : (isHovered ? VibeAIColors.backgroundTertiary.opacity(0.5) : Color.clear)))
         )
         .onTapGesture {
             guard !isLocked else { return }
@@ -1347,7 +1304,7 @@ struct NavItemView: View {
     private func lockIcon(size: CGFloat) -> some View {
         Image(systemName: isLockHovered ? "lock.open.fill" : "lock.fill")
             .scaledFont(size: size)
-            .foregroundColor(isLockHovered ? OmiColors.purplePrimary : lockedColor)
+            .foregroundColor(isLockHovered ? VibeAIColors.purplePrimary : lockedColor)
             .padding(4)
             .contentShape(Rectangle())
             .onHover { hovering in
@@ -1389,9 +1346,9 @@ struct NavItemWithStatusView: View {
     /// Icon color based on state
     private var iconColor: Color {
         if isOn {
-            return isSelected ? OmiColors.textPrimary : OmiColors.textTertiary
+            return isSelected ? VibeAIColors.textPrimary : VibeAIColors.textTertiary
         } else {
-            return OmiColors.error
+            return VibeAIColors.error
         }
     }
 
@@ -1426,7 +1383,7 @@ struct NavItemWithStatusView: View {
                 // Status indicator when collapsed and off
                 if isCollapsed && !isOn && !isToggling && !isPageLoading {
                     Circle()
-                        .fill(OmiColors.error)
+                        .fill(VibeAIColors.error)
                         .frame(width: 6, height: 6)
                         .offset(x: 3, y: -3)
                 }
@@ -1441,7 +1398,7 @@ struct NavItemWithStatusView: View {
             if !isCollapsed {
                 Text(label)
                     .scaledFont(size: 14, weight: isSelected ? .medium : .regular)
-                    .foregroundColor(isSelected ? OmiColors.textPrimary : OmiColors.textSecondary)
+                    .foregroundColor(isSelected ? VibeAIColors.textPrimary : VibeAIColors.textSecondary)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
 
@@ -1455,8 +1412,8 @@ struct NavItemWithStatusView: View {
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(isSelected
-                      ? OmiColors.backgroundTertiary.opacity(0.8)
-                      : (isHovered ? OmiColors.backgroundTertiary.opacity(0.5) : Color.clear))
+                      ? VibeAIColors.backgroundTertiary.opacity(0.8)
+                      : (isHovered ? VibeAIColors.backgroundTertiary.opacity(0.5) : Color.clear))
         )
         .onTapGesture {
             log("SIDEBAR: NavItemWithStatus '\(label)' row tapped at mouse position: \(NSEvent.mouseLocation)")
@@ -1483,7 +1440,7 @@ struct SidebarToggle: View {
         ZStack(alignment: isOn ? .trailing : .leading) {
             // Track - purple when on, red when off
             Capsule()
-                .fill(isOn ? OmiColors.purplePrimary : OmiColors.error)
+                .fill(isOn ? VibeAIColors.purplePrimary : VibeAIColors.error)
                 .frame(width: width, height: height)
 
             // Thumb
@@ -1561,17 +1518,17 @@ private struct SidebarAudioBar: View {
     }
 
     private var barColor: Color {
-        guard isActive else { return OmiColors.textTertiary.opacity(0.5) }
+        guard isActive else { return VibeAIColors.textTertiary.opacity(0.5) }
 
         let boostedLevel = min(1.0, pow(CGFloat(level), 0.5) * 2.0)
         if boostedLevel > 0.5 {
-            return OmiColors.purplePrimary
+            return VibeAIColors.purplePrimary
         } else if boostedLevel > 0.15 {
-            return OmiColors.textPrimary
+            return VibeAIColors.textPrimary
         } else if boostedLevel > 0.02 {
-            return OmiColors.textSecondary
+            return VibeAIColors.textSecondary
         }
-        return OmiColors.textTertiary
+        return VibeAIColors.textTertiary
     }
 
     var body: some View {
@@ -1595,7 +1552,7 @@ struct SidebarRewindIcon: View {
             // Outer pulsing ring when active
             if isActive {
                 Circle()
-                    .stroke(OmiColors.purplePrimary.opacity(0.3), lineWidth: 2)
+                    .stroke(VibeAIColors.purplePrimary.opacity(0.3), lineWidth: 2)
                     .frame(width: iconSize, height: iconSize)
                     .scaleEffect(isPulsing ? 1.4 : 1.0)
                     .opacity(isPulsing ? 0 : 0.8)
@@ -1603,7 +1560,7 @@ struct SidebarRewindIcon: View {
 
             // Inner recording dot
             Circle()
-                .fill(isActive ? OmiColors.purplePrimary : OmiColors.error)
+                .fill(isActive ? VibeAIColors.purplePrimary : VibeAIColors.error)
                 .frame(width: isActive ? 10 : 8, height: isActive ? 10 : 8)
         }
         .frame(width: iconSize, height: iconSize)
@@ -1644,8 +1601,8 @@ struct TierUnlockCelebration: View {
             // Phase 1: Purple highlight border
             if phase == .highlight || phase == .confetti || phase == .text {
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(OmiColors.purplePrimary, lineWidth: phase == .highlight ? 2.5 : 1.5)
-                    .shadow(color: OmiColors.purplePrimary.opacity(phase == .highlight ? 0.8 : 0.3), radius: phase == .highlight ? 12 : 4)
+                    .stroke(VibeAIColors.purplePrimary, lineWidth: phase == .highlight ? 2.5 : 1.5)
+                    .shadow(color: VibeAIColors.purplePrimary.opacity(phase == .highlight ? 0.8 : 0.3), radius: phase == .highlight ? 12 : 4)
                     .transition(.opacity)
             }
 
@@ -1665,8 +1622,8 @@ struct TierUnlockCelebration: View {
                     .padding(.vertical, 4)
                     .background(
                         Capsule()
-                            .fill(OmiColors.purplePrimary)
-                            .shadow(color: OmiColors.purplePrimary.opacity(0.8), radius: 8)
+                            .fill(VibeAIColors.purplePrimary)
+                            .shadow(color: VibeAIColors.purplePrimary.opacity(0.8), radius: 8)
                     )
                     .transition(.scale(scale: 0.5).combined(with: .opacity))
                     .offset(x: 30, y: -8)
@@ -1712,7 +1669,7 @@ struct ConfettiView: View {
     // Pre-computed particle configs (fixed set for reliable animation)
     private let particleConfigs: [(color: Color, size: CGFloat, angle: Double, distance: CGFloat, rotation: Double, isRect: Bool)] = {
         let colors: [Color] = [
-            OmiColors.purplePrimary, OmiColors.purplePrimary.opacity(0.7),
+            VibeAIColors.purplePrimary, VibeAIColors.purplePrimary.opacity(0.7),
             .yellow, .green, .pink, .cyan, .orange, .mint, .indigo
         ]
         return (0..<18).map { _ in
@@ -1785,13 +1742,13 @@ struct BottomNavItemView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .scaledFont(size: 17)
-                .foregroundColor(OmiColors.textTertiary)
+                .foregroundColor(VibeAIColors.textTertiary)
                 .frame(width: iconWidth)
 
             if !isCollapsed {
                 Text(label)
                     .scaledFont(size: 14, weight: .regular)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
 
                 Spacer()
             }
@@ -1801,7 +1758,7 @@ struct BottomNavItemView: View {
         .contentShape(Rectangle())
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isHovered ? OmiColors.backgroundTertiary.opacity(0.5) : Color.clear)
+                .fill(isHovered ? VibeAIColors.backgroundTertiary.opacity(0.5) : Color.clear)
         )
         .onTapGesture {
             log("SIDEBAR: BottomNavItem '\(label)' tapped at mouse position: \(NSEvent.mouseLocation)")

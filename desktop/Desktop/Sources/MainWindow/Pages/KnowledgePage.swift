@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Knowledge page — local Eidetic Memory graph browser.
-/// Search, browse by room, view stats, and manually save memories.
+/// Shows rooms, memory cards, stats, search, and manual save.
 struct KnowledgePage: View {
     @ObservedObject var viewModel: KnowledgeViewModel
     @State private var newMemoryText = ""
@@ -10,95 +10,114 @@ struct KnowledgePage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Stats header
-            statsHeader
+            // Header with stats
+            header
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
+                .padding(.bottom, 12)
 
             // Search bar
             searchBar
                 .padding(.horizontal, 20)
+
+            Divider()
                 .padding(.top, 12)
 
-            // Room filter chips
-            if !viewModel.rooms.isEmpty {
-                roomChips
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-            }
+            // Content
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Rooms section
+                    if !viewModel.rooms.isEmpty {
+                        roomsSection
+                    }
 
-            // Results
-            if viewModel.isSearching {
-                Spacer()
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                Spacer()
-            } else if viewModel.memories.isEmpty && !viewModel.searchQuery.isEmpty {
-                Spacer()
-                emptySearchView
-                Spacer()
-            } else if viewModel.memories.isEmpty {
-                Spacer()
-                emptyStateView
-                Spacer()
-            } else {
-                resultsList
+                    // Memory cards
+                    if viewModel.isSearching || viewModel.isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .padding(.top, 40)
+                    } else if viewModel.memories.isEmpty && viewModel.nodeCount == 0 {
+                        emptyStateView
+                            .padding(.top, 40)
+                    } else if viewModel.memories.isEmpty && !viewModel.searchQuery.isEmpty {
+                        emptySearchView
+                            .padding(.top, 40)
+                    } else {
+                        memoriesGrid
+                    }
+                }
+                .padding(20)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             await viewModel.loadStatus()
-            // Load all memories on appear (broad search)
             if viewModel.memories.isEmpty {
                 await viewModel.loadAll()
             }
         }
     }
 
-    // MARK: - Stats Header
+    // MARK: - Header
 
-    private var statsHeader: some View {
-        HStack(spacing: 16) {
-            Text("Knowledge")
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(VibeAIColors.textPrimary)
+    private var header: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Knowledge")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(VibeAIColors.textPrimary)
+
+                Text("Your local memory graph")
+                    .font(.system(size: 13))
+                    .foregroundColor(VibeAIColors.textTertiary)
+            }
 
             Spacer()
 
-            HStack(spacing: 12) {
-                statBadge(count: viewModel.nodeCount, label: "memories", icon: "brain.fill")
-                statBadge(count: viewModel.rooms.count, label: "rooms", icon: "folder.fill")
-                statBadge(count: viewModel.embeddingCount, label: "vectors", icon: "arrow.triangle.branch")
+            // Stats pills
+            HStack(spacing: 8) {
+                statPill(icon: "brain.fill", value: "\(viewModel.nodeCount)", label: "memories", color: .purple)
+                statPill(icon: "point.3.connected.trianglepath.dotted", value: "\(viewModel.edgeCount)", label: "links", color: .blue)
+                statPill(icon: "arrow.triangle.branch", value: "\(viewModel.embeddingCount)", label: "vectors", color: .green)
+                statPill(icon: "folder.fill", value: "\(viewModel.rooms.count)", label: "rooms", color: .orange)
             }
 
+            // Add button
             Button(action: { showSaveSheet.toggle() }) {
                 Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.system(size: 22))
                     .foregroundColor(VibeAIColors.purplePrimary)
             }
             .buttonStyle(.plain)
-            .help("Save a new memory")
+            .help("Save new knowledge")
             .popover(isPresented: $showSaveSheet) {
                 savePopover
             }
         }
     }
 
-    private func statBadge(count: Int, label: String, icon: String) -> some View {
+    private func statPill(icon: String, value: String, label: String, color: Color) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon)
-                .font(.system(size: 11))
-                .foregroundColor(VibeAIColors.textTertiary)
-            Text("\(count)")
-                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                .foregroundColor(VibeAIColors.textSecondary)
+                .font(.system(size: 10))
+                .foregroundColor(color.opacity(0.8))
+            Text(value)
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundColor(VibeAIColors.textPrimary)
             Text(label)
-                .font(.system(size: 11))
+                .font(.system(size: 10))
                 .foregroundColor(VibeAIColors.textTertiary)
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.1))
+        .cornerRadius(8)
     }
 
-    // MARK: - Search Bar
+    // MARK: - Search
 
     private var searchBar: some View {
         HStack(spacing: 8) {
@@ -115,7 +134,7 @@ struct KnowledgePage: View {
             if !viewModel.searchQuery.isEmpty {
                 Button(action: {
                     viewModel.searchQuery = ""
-                    viewModel.memories = []
+                    Task { await viewModel.loadAll() }
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(VibeAIColors.textTertiary)
@@ -128,16 +147,22 @@ struct KnowledgePage: View {
         .cornerRadius(10)
     }
 
-    // MARK: - Room Filter Chips
+    // MARK: - Rooms Section
 
-    private var roomChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                roomChip(name: "All", isSelected: selectedRoom == nil) {
+    private var roomsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Rooms")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(VibeAIColors.textSecondary)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 8)], spacing: 8) {
+                // "All" room
+                roomCard(name: "All", count: viewModel.nodeCount, icon: "square.grid.2x2.fill", color: .gray, isSelected: selectedRoom == nil) {
                     selectedRoom = nil
                 }
+
                 ForEach(viewModel.rooms, id: \.self) { room in
-                    roomChip(name: room.capitalized, isSelected: selectedRoom == room) {
+                    roomCard(name: room.capitalized, count: nil, icon: roomIcon(room), color: roomColor(room), isSelected: selectedRoom == room) {
                         selectedRoom = room
                     }
                 }
@@ -145,55 +170,113 @@ struct KnowledgePage: View {
         }
     }
 
-    private func roomChip(name: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+    private func roomCard(name: String, count: Int?, icon: String, color: Color, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(name)
-                .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
-                .foregroundColor(isSelected ? .white : VibeAIColors.textSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(isSelected ? VibeAIColors.purplePrimary : VibeAIColors.backgroundSecondary)
-                .cornerRadius(14)
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(isSelected ? .white : color)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(name)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(isSelected ? .white : VibeAIColors.textPrimary)
+                    if let count = count {
+                        Text("\(count) items")
+                            .font(.system(size: 10))
+                            .foregroundColor(isSelected ? .white.opacity(0.7) : VibeAIColors.textTertiary)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(10)
+            .background(isSelected ? color : VibeAIColors.backgroundSecondary)
+            .cornerRadius(10)
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Results List
+    private func roomIcon(_ room: String) -> String {
+        switch room.lowercased() {
+        case "architecture", "design": return "building.2.fill"
+        case "testing", "tests": return "checkmark.shield.fill"
+        case "planning", "plan": return "map.fill"
+        case "learning", "education": return "book.fill"
+        case "general": return "circle.grid.3x3.fill"
+        case "code", "engineering": return "chevron.left.forwardslash.chevron.right"
+        case "voice", "audio": return "waveform"
+        case "memory", "knowledge": return "brain.fill"
+        default: return "folder.fill"
+        }
+    }
 
-    private var resultsList: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 8) {
+    private func roomColor(_ room: String) -> Color {
+        switch room.lowercased() {
+        case "architecture", "design": return .blue
+        case "testing", "tests": return .green
+        case "planning", "plan": return .orange
+        case "learning", "education": return .purple
+        case "general": return .gray
+        case "code", "engineering": return .cyan
+        case "voice", "audio": return .pink
+        case "memory", "knowledge": return .indigo
+        default: return .secondary
+        }
+    }
+
+    // MARK: - Memory Cards Grid
+
+    private var memoriesGrid: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(selectedRoom != nil ? "\(selectedRoom!.capitalized)" : "All Knowledge")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(VibeAIColors.textSecondary)
+
+                Spacer()
+
+                Text("\(filteredMemories.count) items")
+                    .font(.system(size: 12))
+                    .foregroundColor(VibeAIColors.textTertiary)
+            }
+
+            LazyVStack(spacing: 8) {
                 ForEach(filteredMemories) { item in
-                    memoryRow(item)
+                    memoryCard(item)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 12)
         }
     }
 
     private var filteredMemories: [KnowledgeViewModel.KnowledgeItem] {
         guard let room = selectedRoom else { return viewModel.memories }
-        return viewModel.memories.filter { $0.alias?.contains(room) == true }
+        return viewModel.memories.filter { $0.alias?.lowercased().contains(room.lowercased()) == true }
     }
 
-    private func memoryRow(_ item: KnowledgeViewModel.KnowledgeItem) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private func memoryCard(_ item: KnowledgeViewModel.KnowledgeItem) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
             Text(item.payload)
                 .font(.system(size: 13))
                 .foregroundColor(VibeAIColors.textPrimary)
-                .lineLimit(3)
+                .lineLimit(4)
+                .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
+                // Kind badge
                 Text(item.kind)
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(VibeAIColors.purplePrimary)
+                    .foregroundColor(.white)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(VibeAIColors.purplePrimary.opacity(0.15))
+                    .background(kindColor(item.kind))
                     .cornerRadius(4)
 
+                // Source/alias
                 if let alias = item.alias {
+                    Image(systemName: "tag.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(VibeAIColors.textTertiary)
                     Text(alias)
                         .font(.system(size: 10))
                         .foregroundColor(VibeAIColors.textTertiary)
@@ -201,42 +284,72 @@ struct KnowledgePage: View {
 
                 Spacer()
 
-                Text(String(format: "%.0f%%", item.score * 100))
-                    .font(.system(size: 10, design: .monospaced))
+                // Relevance score
+                if item.score > 0 {
+                    HStack(spacing: 2) {
+                        Image(systemName: "chart.bar.fill")
+                            .font(.system(size: 9))
+                        Text(String(format: "%.0f%%", min(item.score * 100, 100)))
+                            .font(.system(size: 10, design: .monospaced))
+                    }
                     .foregroundColor(VibeAIColors.textTertiary)
+                }
             }
         }
-        .padding(10)
+        .padding(12)
         .background(VibeAIColors.backgroundSecondary)
-        .cornerRadius(8)
+        .cornerRadius(10)
+    }
+
+    private func kindColor(_ kind: String) -> Color {
+        switch kind.lowercased() {
+        case "concept": return .purple
+        case "fact": return .blue
+        case "decision": return .orange
+        case "preference": return .green
+        case "insight": return .cyan
+        case "question": return .pink
+        case "room": return .gray
+        default: return .secondary
+        }
     }
 
     // MARK: - Empty States
 
     private var emptyStateView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Image(systemName: "brain.fill")
-                .font(.system(size: 40))
-                .foregroundColor(VibeAIColors.textTertiary)
+                .font(.system(size: 48))
+                .foregroundColor(VibeAIColors.textTertiary.opacity(0.5))
+
             Text("Your knowledge graph is empty")
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(VibeAIColors.textSecondary)
-            Text("Conversations are automatically saved here.\nYou can also add memories manually.")
+
+            Text("Start a voice conversation or chat with the AI.\nKnowledge is automatically extracted and stored here.")
                 .font(.system(size: 13))
                 .foregroundColor(VibeAIColors.textTertiary)
                 .multilineTextAlignment(.center)
+
+            Button("Add Knowledge Manually") {
+                showSaveSheet = true
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(VibeAIColors.purplePrimary)
         }
+        .frame(maxWidth: .infinity)
     }
 
     private var emptySearchView: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 30))
-                .foregroundColor(VibeAIColors.textTertiary)
+                .font(.system(size: 36))
+                .foregroundColor(VibeAIColors.textTertiary.opacity(0.5))
             Text("No results for \"\(viewModel.searchQuery)\"")
                 .font(.system(size: 14))
                 .foregroundColor(VibeAIColors.textSecondary)
         }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Save Popover
@@ -244,11 +357,15 @@ struct KnowledgePage: View {
     private var savePopover: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Save Knowledge")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 15, weight: .semibold))
+
+            Text("Add a fact, preference, or insight to your knowledge graph.")
+                .font(.system(size: 12))
+                .foregroundColor(VibeAIColors.textTertiary)
 
             TextEditor(text: $newMemoryText)
                 .font(.system(size: 13))
-                .frame(width: 300, height: 100)
+                .frame(width: 320, height: 100)
                 .scrollContentBackground(.hidden)
                 .padding(8)
                 .background(VibeAIColors.backgroundSecondary)
@@ -261,6 +378,7 @@ struct KnowledgePage: View {
                     newMemoryText = ""
                 }
                 .buttonStyle(.plain)
+                .foregroundColor(VibeAIColors.textSecondary)
 
                 Button("Save") {
                     Task {
@@ -268,14 +386,16 @@ struct KnowledgePage: View {
                         if saved {
                             newMemoryText = ""
                             showSaveSheet = false
+                            await viewModel.loadAll()
                         }
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(VibeAIColors.purplePrimary)
                 .disabled(newMemoryText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
         .padding(16)
-        .frame(width: 340)
+        .frame(width: 360)
     }
 }

@@ -1,0 +1,38 @@
+---
+id: KNOWLEDGE003
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:KNOWLEDGE003
+  §status:§queued
+  §owner:§ai
+  §title:"Real force-directed knowledge graph visualization"
+  §goal:(§replace §static §circle-layout
+    §with §force-directed §interactive §graph
+    §nodes §float §move §cluster §organically
+    §drag §zoom §pan §click-to-expand)
+  §priority:§high
+
+  §todo:[
+    (§task §id:KNOWLEDGE003.1
+      §goal:(§build §ForceDirectedGraph §SwiftUI §component
+        §physics:[§repulsion §attraction §gravity §damping]
+        §nodes §drift §into §clusters §by §room
+        §edges §as §lines §between §connected §nodes
+        §rooms §as §colored §clusters §not §rigid §circles)
+      §notes:"Use CADisplayLink or Timer for animation. Each node has position + velocity. Forces: nodes repel each other, connected nodes attract, gravity pulls toward center. Rooms emerge as natural clusters from edge connections.")
+
+    (§task §id:KNOWLEDGE003.2
+      §goal:(§add §interaction
+        §drag-nodes §zoom §pan §click-to-expand §hover-tooltip)
+      §notes:"Drag a node to reposition. Scroll to zoom. Click node to show detail panel. Hover shows payload preview. Double-click room cluster to zoom into it.")
+
+    (§task §id:KNOWLEDGE003.3
+      §goal:(§add §visual §polish
+        §animated §edges §glow §on §selected
+        §node-size §by §importance §or §connection-count
+        §room-labels §float §near §clusters
+        §smooth §spring §animation §on §layout-changes))]
+
+  §refs:["D3.js force layout", "vis.js network", "Apple SceneKit for 3D option"]
+  §budget:(§time<3h))

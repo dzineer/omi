@@ -84,9 +84,27 @@ pub async fn memory_status(
     }
 }
 
+pub async fn memory_graph(
+    State(memory): State<Arc<MemoryService>>,
+) -> Json<serde_json::Value> {
+    match memory.graph() {
+        Ok(g) => Json(serde_json::json!({
+            "ok": true,
+            "nodes": g.nodes,
+            "edges": g.edges,
+            "rooms": g.rooms,
+        })),
+        Err(e) => Json(serde_json::json!({
+            "ok": false,
+            "error": e,
+        })),
+    }
+}
+
 pub fn memory_routes() -> Router<Arc<MemoryService>> {
     Router::new()
         .route("/api/memory/save", post(save_memory))
+        .route("/api/memory/graph", get(memory_graph))
         .route("/api/memory/query", post(query_memory))
         .route("/api/memory/status", get(memory_status))
 }

@@ -88,6 +88,63 @@ class KnowledgeViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Graph Data
+
+    @Published var graphRooms: [GraphRoomData] = []
+    @Published var graphNodes: [GraphNodeData] = []
+
+    struct GraphRoomData: Identifiable {
+        let id: String
+        let name: String
+        let count: Int
+    }
+
+    struct GraphNodeData: Identifiable {
+        let id: String
+        let kind: String
+        let payload: String
+        let room: String
+    }
+
+    struct GraphResponse: Decodable {
+        let ok: Bool
+        let nodes: [GraphNodeResponse]?
+        let rooms: [GraphRoomResponse]?
+        let error: String?
+    }
+
+    struct GraphNodeResponse: Decodable {
+        let id: String
+        let kind: String
+        let payload: String
+        let alias: String?
+        let room: String
+    }
+
+    struct GraphRoomResponse: Decodable {
+        let name: String
+        let count: Int
+    }
+
+    func loadGraph() async {
+        do {
+            guard let url = URL(string: "\(baseURL)/api/memory/graph") else { return }
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(GraphResponse.self, from: data)
+
+            if response.ok {
+                graphRooms = (response.rooms ?? []).map {
+                    GraphRoomData(id: $0.name, name: $0.name, count: $0.count)
+                }
+                graphNodes = (response.nodes ?? []).map {
+                    GraphNodeData(id: $0.id, kind: $0.kind, payload: $0.payload, room: $0.room)
+                }
+            }
+        } catch {
+            logError("KnowledgeViewModel: loadGraph failed", error: error)
+        }
+    }
+
     // MARK: - Load All
 
     /// Load all memories by querying with a broad term.

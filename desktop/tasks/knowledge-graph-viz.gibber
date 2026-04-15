@@ -1,0 +1,44 @@
+---
+id: KNOWLEDGE002
+gibber_dict: meta/v2, omi-stt
+---
+
+(§task §id:KNOWLEDGE002
+  §status:§wip
+  §owner:§ai
+  §title:"Full knowledge graph system with rooms, tree, and visualization"
+  §goal:(§build §complete §knowledge §system
+    §with:[§topic-rooms §graph-tree §node-connections §visual-layout §auto-classify])
+
+  §todo:[
+    (§task §id:KNOWLEDGE002.1
+      §status:§queued
+      §owner:§ai
+      §goal:(§add §topic-rooms §to §rust §backend
+        §reclassify §existing §memories §into §proper §rooms)
+      §files:[Backend-Rust/src/services/memory.rs]
+      §notes:"Add rooms: architecture, voice, memory, agents, ui, tools, code. Reclassify existing 12 memories by keyword matching. Add /api/memory/rooms endpoint that returns room tree with counts.")
+
+    (§task §id:KNOWLEDGE002.2
+      §status:§queued
+      §owner:§ai
+      §goal:(§add §graph-structure §endpoint
+        §returns §nodes §edges §rooms §for §visualization)
+      §files:[Backend-Rust/src/routes/memory.rs]
+      §notes:"New endpoint GET /api/memory/graph returns {nodes: [{id, kind, payload, room}], edges: [{from, to, kind}], rooms: [{name, count}]}. Used by SwiftUI to render the graph.")
+
+    (§task §id:KNOWLEDGE002.3
+      §status:§queued
+      §owner:§ai
+      §goal:(§build §KnowledgeGraphView §visual §graph §component)
+      §files:[Desktop/Sources/MainWindow/Components/KnowledgeGraphView.swift]
+      §notes:"SwiftUI Canvas or GeometryReader. Rooms as large colored circles. Memory nodes as smaller dots inside rooms. Edges as lines between connected nodes. Interactive: click node to see details, click room to filter.")
+
+    (§task §id:KNOWLEDGE002.4
+      §status:§queued
+      §owner:§ai
+      §goal:(§redesign §KnowledgePage §with §graph-view §and §room-tree)
+      §files:[Desktop/Sources/MainWindow/Pages/KnowledgePage.swift]
+      §notes:"Split layout: left = room tree sidebar, center = graph visualization, right = detail panel. Room tree shows hierarchy with counts. Graph shows visual connections. Click node shows detail.")]
+
+  §budget:(§time<2h))

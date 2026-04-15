@@ -26,7 +26,12 @@ struct KnowledgePage: View {
             // Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    // Rooms section
+                    // Graph visualization
+                    if !viewModel.graphRooms.isEmpty {
+                        graphSection
+                    }
+
+                    // Rooms chips
                     if !viewModel.rooms.isEmpty {
                         roomsSection
                     }
@@ -55,8 +60,74 @@ struct KnowledgePage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             await viewModel.loadStatus()
+            await viewModel.loadGraph()
             if viewModel.memories.isEmpty {
                 await viewModel.loadAll()
+            }
+        }
+    }
+
+    // MARK: - Graph Visualization
+
+    @State private var selectedNodeDetail: KnowledgeGraphView.GraphMemoryNode?
+
+    private var graphSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Knowledge Graph")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(VibeAIColors.textSecondary)
+                Spacer()
+                Text("\(viewModel.graphNodes.count) nodes, \(viewModel.graphRooms.count) rooms")
+                    .font(.system(size: 11))
+                    .foregroundColor(VibeAIColors.textTertiary)
+            }
+
+            KnowledgeGraphView(
+                rooms: viewModel.graphRooms.map { room in
+                    KnowledgeGraphView.GraphRoom(
+                        id: room.id,
+                        name: room.name,
+                        count: room.count,
+                        nodes: viewModel.graphNodes
+                            .filter { $0.room == room.name }
+                            .map { KnowledgeGraphView.GraphMemoryNode(id: $0.id, payload: $0.payload, kind: $0.kind) },
+                        color: roomColor(room.name)
+                    )
+                },
+                selectedRoom: selectedRoom,
+                onSelectRoom: { room in
+                    selectedRoom = room
+                },
+                onSelectNode: { node in
+                    selectedNodeDetail = node
+                }
+            )
+            .frame(height: 300)
+            .background(VibeAIColors.backgroundSecondary.opacity(0.5))
+            .cornerRadius(12)
+
+            // Node detail popover
+            if let node = selectedNodeDetail {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(node.payload)
+                            .font(.system(size: 12))
+                            .foregroundColor(VibeAIColors.textPrimary)
+                        Text(node.kind)
+                            .font(.system(size: 10))
+                            .foregroundColor(VibeAIColors.purplePrimary)
+                    }
+                    Spacer()
+                    Button(action: { selectedNodeDetail = nil }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(VibeAIColors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(10)
+                .background(VibeAIColors.backgroundSecondary)
+                .cornerRadius(8)
             }
         }
     }

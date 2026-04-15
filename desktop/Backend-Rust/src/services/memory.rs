@@ -175,6 +175,90 @@ impl MemoryService {
         })
     }
 
+    /// Return the full graph structure for visualization.
+    pub fn graph(&self) -> Result<GraphData, String> {
+        if !self.graph_path.exists() {
+            return Ok(GraphData {
+                nodes: Vec::new(),
+                edges: Vec::new(),
+                rooms: Vec::new(),
+            });
+        }
+
+        let graph = FileGraph::open(&self.graph_path)
+            .map_err(|e| format!("graph open: {e}"))?;
+
+        let mut nodes = Vec::new();
+        let mut rooms_map: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+
+        // Collect all nodes
+        for kind in &[NodeKind::Concept, NodeKind::Room, NodeKind::Identity] {
+            for node in graph.nodes_by_kind(*kind) {
+                let room = self.classify_to_room(&node.payload);
+                *rooms_map.entry(room.clone()).or_insert(0) += 1;
+
+                nodes.push(GraphNode {
+                    id: node.id.to_string(),
+                    kind: node.kind.name().to_string(),
+                    payload: node.payload.clone(),
+                    alias: node.alias.clone(),
+                    room,
+                });
+            }
+        }
+
+        // Build edges from room membership (each memory connects to its room)
+        let mut edges = Vec::new();
+        for node in &nodes {
+            if node.kind != "room" {
+                // Connect memory to its room node
+                edges.push(GraphEdge {
+                    from: node.id.clone(),
+                    to: node.room.clone(),
+                    kind: "belongs_to".to_string(),
+                });
+            }
+        }
+
+        // Build room list
+        let rooms: Vec<RoomInfo> = rooms_map.into_iter()
+            .map(|(name, count)| RoomInfo { name, count })
+            .collect();
+
+        Ok(GraphData { nodes, edges, rooms })
+    }
+
+    /// Classify a memory into a topic room by keyword matching.
+    fn classify_to_room(&self, text: &str) -> String {
+        let lower = text.to_lowercase();
+
+        let room_keywords: Vec<(&str, Vec<&str>)> = vec![
+            ("voice", vec!["voice", "speech", "stt", "tts", "whisper", "kokoro", "microphone", "audio", "transcri"]),
+            ("agents", vec!["claude", "agent", "chat", "bridge", "acp", "mcp", "llm", "prompt"]),
+            ("memory", vec!["memory", "eidetic", "knowledge", "graph", "recall", "embedding", "vector"]),
+            ("architecture", vec!["rust", "swift", "backend", "frontend", "server", "api", "endpoint", "route"]),
+            ("tools", vec!["gibber", "tool", "skill", "hook", "executor", "plugin"]),
+            ("ui", vec!["sidebar", "button", "page", "view", "layout", "interface", "design", "rebrand"]),
+            ("code", vec!["compile", "build", "binary", "package", "cargo", "swift build", "onnx"]),
+            ("preferences", vec!["prefer", "local-first", "no cloud", "privacy", "zero api"]),
+        ];
+
+        let mut best_room = "general".to_string();
+        let mut best_score = 0;
+
+        for (room, keywords) in &room_keywords {
+            let score: usize = keywords.iter()
+                .filter(|kw| lower.contains(*kw))
+                .count();
+            if score > best_score {
+                best_score = score;
+                best_room = room.to_string();
+            }
+        }
+
+        best_room
+    }
+
     fn embed_text(&self, text: &str) -> Option<Vec<f32>> {
         let mut guard = self.embedder.lock().ok()?;
         let model = guard.as_mut()?;
@@ -218,4 +302,33 @@ pub struct MemoryStatus {
     pub edges: usize,
     pub embeddings: usize,
     pub rooms: Vec<String>,
+}
+
+#[derive(serde::Serialize)]
+pub struct GraphData {
+    pub nodes: Vec<GraphNode>,
+    pub edges: Vec<GraphEdge>,
+    pub rooms: Vec<RoomInfo>,
+}
+
+#[derive(serde::Serialize)]
+pub struct GraphNode {
+    pub id: String,
+    pub kind: String,
+    pub payload: String,
+    pub alias: Option<String>,
+    pub room: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct GraphEdge {
+    pub from: String,
+    pub to: String,
+    pub kind: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct RoomInfo {
+    pub name: String,
+    pub count: usize,
 }

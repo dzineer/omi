@@ -425,26 +425,35 @@ struct SidebarView: View {
     // MARK: - Header Section (Logo + Collapse Button on same row)
     private var headerSection: some View {
         HStack(spacing: 12) {
-            // Vibe AI logo icon - using the herologo from Resources
-            if let logoImage = NSImage(contentsOf: Bundle.resourceBundle.url(forResource: "herologo", withExtension: "png")!) {
-                Image(nsImage: logoImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: iconWidth, height: iconWidth)
-            } else {
-                // Fallback SF Symbol
-                Image(systemName: "circle.fill")
-                    .scaledFont(size: 17)
-                    .foregroundColor(VibeAIColors.purplePrimary)
-                    .frame(width: iconWidth)
+            if isCollapsed {
+                // Collapsed: show small icon
+                if let logoImage = NSImage(contentsOf: Bundle.resourceBundle.url(forResource: "herologo", withExtension: "png")!) {
+                    Image(nsImage: logoImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: iconWidth, height: iconWidth)
+                } else {
+                    Image(systemName: "circle.fill")
+                        .scaledFont(size: 17)
+                        .foregroundColor(VibeAIColors.purplePrimary)
+                        .frame(width: iconWidth)
+                }
             }
 
             if !isCollapsed {
-                // Brand name
-                Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "VibeAi")
-                    .scaledFont(size: 22, weight: .bold)
-                    .foregroundColor(VibeAIColors.textPrimary)
-                    .tracking(-0.5)
+                // Expanded: show VibeAI logo image
+                if let logoImage = NSImage(contentsOfFile: Bundle.resourceBundle.path(forResource: "VibeAI-logo", ofType: "png") ?? "") {
+                    Image(nsImage: logoImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(height: 28)
+                } else {
+                    // Fallback to text
+                    Text("VibeAi")
+                        .scaledFont(size: 22, weight: .bold)
+                        .foregroundColor(VibeAIColors.textPrimary)
+                        .tracking(-0.5)
+                }
 
                 Spacer()
 

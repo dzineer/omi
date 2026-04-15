@@ -48,6 +48,10 @@ struct KnowledgePage: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             await viewModel.loadStatus()
+            // Load all memories on appear (broad search)
+            if viewModel.memories.isEmpty {
+                await viewModel.loadAll()
+            }
         }
     }
 

@@ -88,6 +88,37 @@ class KnowledgeViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Load All
+
+    /// Load all memories by querying with a broad term.
+    /// Eidetic's recall pipeline returns top results ranked by relevance.
+    func loadAll() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            guard let url = URL(string: "\(baseURL)/api/memory/query") else { return }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "query": "*",
+                "limit": 50,
+            ])
+
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let response = try JSONDecoder().decode(QueryResponse.self, from: data)
+
+            if response.ok, let results = response.results {
+                memories = results.map { r in
+                    KnowledgeItem(id: r.id, kind: r.kind, payload: r.payload, score: r.score, alias: r.alias)
+                }
+            }
+        } catch {
+            logError("KnowledgeViewModel: loadAll failed", error: error)
+        }
+    }
+
     // MARK: - Search
 
     func search(_ query: String) async {

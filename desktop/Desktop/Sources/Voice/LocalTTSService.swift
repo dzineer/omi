@@ -83,16 +83,25 @@ actor LocalTTSService {
     }
 
     private func startServer() async {
-        // Find Python
+        // Find Python (reuses MLX Whisper venv, which the app auto-provisions)
         let pythonPath = findPython()
         guard let python = pythonPath else {
             logError("LocalTTSService: Python not found")
             return
         }
 
-        let scriptPath = NSHomeDirectory() + "/Library/Application Support/VoiceAI/kokoro_tts_server.py"
-        guard FileManager.default.fileExists(atPath: scriptPath) else {
-            logError("LocalTTSService: kokoro_tts_server.py not found at \(scriptPath)")
+        // Auto-install kokoro-onnx into the venv if missing.
+        await ensureKokoroInstalled(venvPython: python)
+
+        // Auto-download Kokoro model + voices if missing.
+        await ensureKokoroAssets()
+
+        // Auto-write the server script to disk if missing.
+        let scriptPath: String
+        do {
+            scriptPath = try writeServerScript()
+        } catch {
+            logError("LocalTTSService: Failed to write server script", error: error)
             return
         }
 
@@ -220,5 +229,122 @@ actor LocalTTSService {
             if FileManager.default.isExecutableFile(atPath: path) { return path }
         }
         return nil
+    }
+
+    // MARK: - Dependency & Asset Provisioning
+
+    /// Install kokoro-onnx into the shared venv if it isn't already installed.
+    private func ensureKokoroInstalled(venvPython: String) async {
+        // Only auto-install when running from the shared venv (not system python).
+        guard venvPython.contains("mlx-whisper-venv") else { return }
+        let check = Process()
+        check.executableURL = URL(fileURLWithPath: venvPython)
+        check.arguments = ["-c", "import kokoro_onnx"]
+        check.standardOutput = FileHandle.nullDevice
+        check.standardError = FileHandle.nullDevice
+        do {
+            try check.run()
+            check.waitUntilExit()
+            if check.terminationStatus == 0 { return }  // Already installed
+        } catch { return }
+
+        log("LocalTTSService: Installing kokoro-onnx into venv")
+        let install = Process()
+        install.executableURL = URL(fileURLWithPath: venvPython)
+        install.arguments = ["-m", "pip", "install", "--quiet", "kokoro-onnx"]
+        install.standardOutput = FileHandle.nullDevice
+        install.standardError = FileHandle.nullDevice
+        do {
+            try install.run()
+            install.waitUntilExit()
+            if install.terminationStatus == 0 {
+                log("LocalTTSService: kokoro-onnx installed")
+            } else {
+                logError("LocalTTSService: kokoro-onnx install failed (exit \(install.terminationStatus))")
+            }
+        } catch {
+            logError("LocalTTSService: Failed to run pip install", error: error)
+        }
+    }
+
+    /// Download Kokoro model + voices on first run if they aren't cached on disk.
+    private func ensureKokoroAssets() async {
+        let home = NSHomeDirectory()
+        let ttsDir = home + "/Library/Application Support/VoiceTTS"
+        try? FileManager.default.createDirectory(atPath: ttsDir, withIntermediateDirectories: true)
+
+        let assets: [(name: String, url: String)] = [
+            ("kokoro-v1.0.onnx", "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"),
+            ("voices-v1.0.bin", "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"),
+        ]
+        for asset in assets {
+            let path = "\(ttsDir)/\(asset.name)"
+            if FileManager.default.fileExists(atPath: path) { continue }
+            log("LocalTTSService: Downloading \(asset.name) from GitHub releases")
+            guard let url = URL(string: asset.url) else { continue }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                try data.write(to: URL(fileURLWithPath: path))
+                log("LocalTTSService: Wrote \(asset.name) (\(data.count) bytes)")
+            } catch {
+                logError("LocalTTSService: Failed to download \(asset.name)", error: error)
+            }
+        }
+    }
+
+    /// Write the Kokoro server script to disk, creating the directory if needed.
+    private func writeServerScript() throws -> String {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let scriptDir = appSupport.appendingPathComponent("VoiceAI")
+        try FileManager.default.createDirectory(at: scriptDir, withIntermediateDirectories: true)
+        let scriptPath = scriptDir.appendingPathComponent("kokoro_tts_server.py")
+
+        let script = #"""
+        """Kokoro TTS server — FastAPI endpoint for text-to-speech."""
+        from fastapi import FastAPI, Form
+        from fastapi.responses import Response
+        from kokoro_onnx import Kokoro
+        import numpy as np
+        import os, io, wave
+
+        MODEL_PATH = os.path.expanduser("~/Library/Application Support/VoiceTTS/kokoro-v1.0.onnx")
+        VOICES_PATH = os.path.expanduser("~/Library/Application Support/VoiceTTS/voices-v1.0.bin")
+
+        app = FastAPI()
+        kokoro = None
+
+        @app.on_event("startup")
+        async def load_model():
+            global kokoro
+            kokoro = Kokoro(MODEL_PATH, VOICES_PATH)
+
+        @app.get("/health")
+        async def health():
+            return {"status": "ok", "model": "kokoro-v1.0"}
+
+        @app.post("/v1/audio/speech")
+        async def speak(
+            text: str = Form(...),
+            voice: str = Form("af_heart"),
+            speed: float = Form(1.0),
+        ):
+            samples, sr = kokoro.create(text, voice=voice, speed=speed)
+            audio_16bit = np.clip(samples * 32767, -32768, 32767).astype(np.int16)
+            buf = io.BytesIO()
+            with wave.open(buf, "w") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(sr)
+                w.writeframes(audio_16bit.tobytes())
+            return Response(content=buf.getvalue(), media_type="audio/wav")
+
+        if __name__ == "__main__":
+            import uvicorn
+            port = int(os.environ.get("PORT", "8788"))
+            uvicorn.run(app, host="127.0.0.1", port=port)
+        """#
+
+        try script.write(to: scriptPath, atomically: true, encoding: .utf8)
+        return scriptPath.path
     }
 }

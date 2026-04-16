@@ -770,7 +770,14 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         }
 
         sessions = []
-        sessionsLoadError = lastError?.localizedDescription ?? "Unknown error"
+        // Local-first mode: swallow the remote-chat-fetch error silently.
+        // The backend is optional; users running fully local don't need to see
+        // "Failed to load chats" with an HTTP status code. The welcome view will
+        // render as if the user simply has no sessions yet.
+        sessionsLoadError = nil
+        if let lastError = lastError {
+            log("ChatProvider: Remote chat session fetch unavailable (\(lastError.localizedDescription)) — falling back to local-only mode")
+        }
     }
 
     /// Toggle the starred filter and reload sessions
@@ -1667,7 +1674,11 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         }
 
         messages = []
-        sessionsLoadError = lastError?.localizedDescription ?? "Unknown error"
+        // Local-first mode: swallow the remote-message-fetch error silently.
+        sessionsLoadError = nil
+        if let lastError = lastError {
+            log("ChatProvider: Remote default messages unavailable (\(lastError.localizedDescription)) — running local-only")
+        }
         isLoading = false
     }
 

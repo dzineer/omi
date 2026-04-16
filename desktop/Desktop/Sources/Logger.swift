@@ -1,11 +1,8 @@
 import Foundation
 import Sentry
 
-private let logFile: String = {
-    let isDev = Bundle.main.bundleIdentifier?.hasSuffix("-dev") == true
-    return isDev ? "/tmp/omi-dev.log" : "/tmp/omi.log"
-}()
-private let logQueue = DispatchQueue(label: "me.omi.logger", qos: .utility)
+private let logFile: String = "/tmp/vibeai.log"
+private let logQueue = DispatchQueue(label: "com.vibeaiglobal.vibeai.logger", qos: .utility)
 private let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "HH:mm:ss.SSS"  // Added milliseconds for perf tracking

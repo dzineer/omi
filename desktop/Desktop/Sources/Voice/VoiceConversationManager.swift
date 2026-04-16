@@ -32,6 +32,16 @@ final class VoiceConversationManager: ObservableObject {
     private var lastMessageCount = 0
     private var pendingUserMessage = false
 
+    /// Absolute time until which incoming transcripts are ignored. Prevents the
+    /// mic from picking up the speaker's own output and the short echo tail that
+    /// lingers after TTS finishes.
+    private var muteUntil: Date?
+
+    /// Grace period after TTS finishes before re-enabling transcript handling.
+    /// Long enough to swallow room reverb but short enough that the user can
+    /// start talking again quickly.
+    private static let postSpeechGracePeriod: TimeInterval = 1.5
+
     // MARK: - Init
 
     init() {
@@ -98,9 +108,15 @@ final class VoiceConversationManager: ObservableObject {
         guard isActive else { return }
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
-        // Ignore transcripts while AI is speaking (feedback prevention)
-        if state == .speaking {
-            log("VoiceConversationManager: Ignoring transcript during speech (feedback prevention)")
+        // Feedback prevention: ignore transcripts while the AI is speaking, while
+        // we're still waiting on the AI's response, and for a short grace period
+        // after TTS finishes (to swallow room reverb / mic echo tail).
+        if state == .speaking || state == .thinking {
+            log("VoiceConversationManager: Ignoring transcript during \(state) (feedback prevention)")
+            return
+        }
+        if let muteUntil = muteUntil, Date() < muteUntil {
+            log("VoiceConversationManager: Ignoring transcript during post-speech grace period")
             return
         }
 
@@ -179,8 +195,10 @@ final class VoiceConversationManager: ObservableObject {
             }
         }
 
-        log("VoiceConversationManager: Done speaking, back to listening")
+        log("VoiceConversationManager: Done speaking, back to listening (grace period \(Self.postSpeechGracePeriod)s)")
         if isActive {
+            // Block incoming transcripts for a short grace window to avoid echo pickup.
+            muteUntil = Date().addingTimeInterval(Self.postSpeechGracePeriod)
             state = .listening
         }
     }

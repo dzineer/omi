@@ -1838,9 +1838,11 @@ class AppState: ObservableObject {
             }
         } catch {
             logError("Conversations: API fetch failed", error: error)
-            // Only set error if we don't have cached data
+            // Local-first mode: never surface the remote-fetch error to the UI.
+            // An empty list just means there are no cached conversations yet,
+            // which is the expected state for a fresh local install.
             if conversations.isEmpty {
-                conversationsError = error.localizedDescription
+                log("Conversations: Remote fetch unavailable (\(error.localizedDescription)) — showing empty state")
             } else {
                 log("Conversations: Using cached data after API failure")
             }

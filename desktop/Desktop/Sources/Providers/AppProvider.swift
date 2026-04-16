@@ -3,15 +3,15 @@ import SwiftUI
 /// State management for apps/plugins functionality
 @MainActor
 class AppProvider: ObservableObject {
-    @Published var apps: [OmiApp] = []
-    @Published var popularApps: [OmiApp] = []  // Featured apps (is_popular=true)
-    @Published var integrationApps: [OmiApp] = []  // Apps with external_integration capability
-    @Published var chatApps: [OmiApp] = []  // Apps with chat capability
-    @Published var summaryApps: [OmiApp] = []  // Apps with memories capability
-    @Published var notificationApps: [OmiApp] = []  // Apps with proactive_notification capability
-    @Published var enabledApps: [OmiApp] = []
-    @Published var categories: [OmiAppCategory] = []
-    @Published var capabilities: [OmiAppCapability] = []
+    @Published var apps: [VibeAiApp] = []
+    @Published var popularApps: [VibeAiApp] = []  // Featured apps (is_popular=true)
+    @Published var integrationApps: [VibeAiApp] = []  // Apps with external_integration capability
+    @Published var chatApps: [VibeAiApp] = []  // Apps with chat capability
+    @Published var summaryApps: [VibeAiApp] = []  // Apps with memories capability
+    @Published var notificationApps: [VibeAiApp] = []  // Apps with proactive_notification capability
+    @Published var enabledApps: [VibeAiApp] = []
+    @Published var categories: [VibeAiAppCategory] = []
+    @Published var capabilities: [VibeAiAppCapability] = []
 
     @Published var isLoading = false
     @Published var isSearching = false
@@ -23,7 +23,7 @@ class AppProvider: ObservableObject {
     @Published var showInstalledOnly = false
 
     @Published var errorMessage: String?
-    @Published var categoryFilteredApps: [OmiApp]?
+    @Published var categoryFilteredApps: [VibeAiApp]?
     @Published var hasMoreCategoryApps = false
     @Published var isLoadingMore = false
 
@@ -57,13 +57,13 @@ class AppProvider: ObservableObject {
 
             // Process groups off main thread
             let processed = await Task.detached(priority: .utility) {
-                var dedupedApps: [OmiApp] = []
-                var popular: [OmiApp] = []
-                var integration: [OmiApp] = []
-                var chat: [OmiApp] = []
-                var summary: [OmiApp] = []
-                var notification: [OmiApp] = []
-                var allApps: [OmiApp] = []
+                var dedupedApps: [VibeAiApp] = []
+                var popular: [VibeAiApp] = []
+                var integration: [VibeAiApp] = []
+                var chat: [VibeAiApp] = []
+                var summary: [VibeAiApp] = []
+                var notification: [VibeAiApp] = []
+                var allApps: [VibeAiApp] = []
 
                 for group in v2Response.groups {
                     allApps.append(contentsOf: group.data)
@@ -204,7 +204,7 @@ class AppProvider: ObservableObject {
     // MARK: - App Management
 
     /// Toggle app enabled state
-    func toggleApp(_ app: OmiApp) async {
+    func toggleApp(_ app: VibeAiApp) async {
         appLoadingStates[app.id] = true
         defer { appLoadingStates[app.id] = false }
 
@@ -249,13 +249,13 @@ class AppProvider: ObservableObject {
     }
 
     /// Enable an app
-    func enableApp(_ app: OmiApp) async {
+    func enableApp(_ app: VibeAiApp) async {
         guard !app.enabled else { return }
         await toggleApp(app)
     }
 
     /// Disable an app
-    func disableApp(_ app: OmiApp) async {
+    func disableApp(_ app: VibeAiApp) async {
         guard app.enabled else { return }
         await toggleApp(app)
     }
@@ -282,7 +282,7 @@ class AppProvider: ObservableObject {
     }
 
     /// Get apps filtered by category (supports special section IDs)
-    func apps(forCategory category: String) -> [OmiApp] {
+    func apps(forCategory category: String) -> [VibeAiApp] {
         switch category {
         case "featured":
             return popularApps
@@ -296,7 +296,7 @@ class AppProvider: ObservableObject {
     }
 
     /// Get apps filtered by capability
-    func apps(forCapability capability: String) -> [OmiApp] {
+    func apps(forCapability capability: String) -> [VibeAiApp] {
         apps.filter { $0.capabilities.contains(capability) }
     }
 

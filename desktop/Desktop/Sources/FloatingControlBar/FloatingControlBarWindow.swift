@@ -183,7 +183,7 @@ class FloatingControlBarWindow: NSWindow, NSWindowDelegate {
             makeKeyAndOrderFront(nil)
             focusInputField()
         } else {
-            AnalyticsManager.shared.floatingBarAskOmiOpened(source: "button")
+            AnalyticsManager.shared.floatingBarAskVibeAiOpened(source: "button")
             onAskAI?()
         }
     }
@@ -210,7 +210,7 @@ class FloatingControlBarWindow: NSWindow, NSWindowDelegate {
     }
 
     func closeAIConversation() {
-        AnalyticsManager.shared.floatingBarAskOmiClosed()
+        AnalyticsManager.shared.floatingBarAskVibeAiClosed()
 
         // Cancel any in-flight chat streaming to prevent re-expansion
         FloatingControlBarManager.shared.cancelChat()
@@ -663,7 +663,7 @@ class FloatingControlBarWindow: NSWindow, NSWindowDelegate {
 class FloatingControlBarManager {
     static let shared = FloatingControlBarManager()
 
-    private static let kAskOmiEnabled = "askOmiBarEnabled"
+    private static let kAskVibeAiEnabled = "askVibeAiBarEnabled"
 
     private var window: FloatingControlBarWindow?
     private var recordingCancellable: AnyCancellable?
@@ -676,13 +676,13 @@ class FloatingControlBarManager {
     var isEnabled: Bool {
         get {
             // Default to true if never set
-            if UserDefaults.standard.object(forKey: Self.kAskOmiEnabled) == nil {
+            if UserDefaults.standard.object(forKey: Self.kAskVibeAiEnabled) == nil {
                 return true
             }
-            return UserDefaults.standard.bool(forKey: Self.kAskOmiEnabled)
+            return UserDefaults.standard.bool(forKey: Self.kAskVibeAiEnabled)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: Self.kAskOmiEnabled)
+            UserDefaults.standard.set(newValue, forKey: Self.kAskVibeAiEnabled)
         }
     }
 
@@ -817,7 +817,7 @@ class FloatingControlBarManager {
             return
         }
 
-        AnalyticsManager.shared.floatingBarAskOmiOpened(source: "shortcut")
+        AnalyticsManager.shared.floatingBarAskVibeAiOpened(source: "shortcut")
         if !window.isVisible {
             show()
         }

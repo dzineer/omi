@@ -83,7 +83,7 @@ class FocusStorage: ObservableObject {
     /// When the analysis cooldown period will end (nil if not in cooldown)
     @Published private(set) var cooldownEndTime: Date?
 
-    private let storageKey = "omi.focus.sessions"
+    private let storageKey = "vibeai.focus.sessions"
     private let maxStoredSessions = 500
 
     private init() {

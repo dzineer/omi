@@ -82,7 +82,7 @@ struct SettingsContentView: View {
     @State private var permissionError: String?
 
     // Ask VibeAi floating bar state
-    @State private var showAskOmiBar: Bool = false
+    @State private var showAskVibeAiBar: Bool = false
 
     // Transcription state
     @State private var isTranscribing: Bool
@@ -255,7 +255,7 @@ struct SettingsContentView: View {
         case memoryAssistant = "Memory Assistant"
         case analysisThrottle = "Analysis Throttle"
         case goals = "Goals"
-        case askOmiFloatingBar = "Ask VibeAi Floating Bar"
+        case askVibeAiFloatingBar = "Ask VibeAi Floating Bar"
         case preferences = "Preferences"
         case troubleshooting = "Troubleshooting"
 
@@ -270,7 +270,7 @@ struct SettingsContentView: View {
             case .memoryAssistant: return "brain.head.profile"
             case .analysisThrottle: return "clock.arrow.2.circlepath"
             case .goals: return "target"
-            case .askOmiFloatingBar: return "sparkles"
+            case .askVibeAiFloatingBar: return "sparkles"
             case .preferences: return "slider.horizontal.3"
             case .troubleshooting: return "wrench.and.screwdriver"
             }
@@ -374,7 +374,7 @@ struct SettingsContentView: View {
             // Sync transcription state with appState
             isTranscribing = appState.isTranscribing
             // Sync floating bar state
-            showAskOmiBar = FloatingControlBarManager.shared.isVisible
+            showAskVibeAiBar = FloatingControlBarManager.shared.isVisible
             // Refresh notification permission state
             appState.checkNotificationPermission()
         }
@@ -392,7 +392,7 @@ struct SettingsContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToFloatingBarSettings)) { _ in
             selectedSection = .advanced
-            selectedAdvancedSubsection = .askOmiFloatingBar
+            selectedAdvancedSubsection = .askVibeAiFloatingBar
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // Refresh notification permission when app becomes active (user may have changed it in System Settings)
@@ -544,26 +544,26 @@ struct SettingsContentView: View {
             settingsCard(settingId: "general.askomi") {
                 HStack(spacing: 16) {
                     Circle()
-                        .fill(showAskOmiBar ? VibeAIColors.success : VibeAIColors.textTertiary.opacity(0.3))
+                        .fill(showAskVibeAiBar ? VibeAIColors.success : VibeAIColors.textTertiary.opacity(0.3))
                         .frame(width: 12, height: 12)
-                        .shadow(color: showAskOmiBar ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
+                        .shadow(color: showAskVibeAiBar ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Ask VibeAi")
                             .scaledFont(size: 16, weight: .semibold)
                             .foregroundColor(VibeAIColors.textPrimary)
 
-                        Text(showAskOmiBar ? "Floating bar is visible (⌘\\)" : "Floating bar is hidden (⌘\\)")
+                        Text(showAskVibeAiBar ? "Floating bar is visible (⌘\\)" : "Floating bar is hidden (⌘\\)")
                             .scaledFont(size: 13)
                             .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
 
-                    Toggle("", isOn: $showAskOmiBar)
+                    Toggle("", isOn: $showAskVibeAiBar)
                         .toggleStyle(.switch)
                         .labelsHidden()
-                        .onChange(of: showAskOmiBar) { _, newValue in
+                        .onChange(of: showAskVibeAiBar) { _, newValue in
                             if newValue {
                                 FloatingControlBarManager.shared.show()
                             } else {
@@ -2375,8 +2375,8 @@ struct SettingsContentView: View {
                 analysisThrottleSubsection
             case .goals:
                 goalsSubsection
-            case .askOmiFloatingBar:
-                askOmiFloatingBarSubsection
+            case .askVibeAiFloatingBar:
+                askVibeAiFloatingBarSubsection
             case .preferences:
                 preferencesSubsection
             case .troubleshooting:
@@ -3586,7 +3586,7 @@ struct SettingsContentView: View {
         }
     }
 
-    private var askOmiFloatingBarSubsection: some View {
+    private var askVibeAiFloatingBarSubsection: some View {
         VStack(spacing: 20) {
             ShortcutsSettingsSection(highlightedSettingId: $highlightedSettingId)
         }

@@ -2709,7 +2709,7 @@ struct ScoreResponse: Codable {
 // MARK: - App Models
 
 /// App summary for list views (lightweight)
-struct OmiApp: Codable, Identifiable, Sendable {
+struct VibeAiApp: Codable, Identifiable, Sendable {
     let id: String
     let name: String
     let description: String
@@ -2794,7 +2794,7 @@ struct OmiApp: Codable, Identifiable, Sendable {
 }
 
 /// Full app details
-struct OmiAppDetails: Codable, Identifiable {
+struct VibeAiAppDetails: Codable, Identifiable {
     let id: String
     let name: String
     let description: String
@@ -2871,20 +2871,20 @@ struct OmiAppDetails: Codable, Identifiable {
 }
 
 /// App category
-struct OmiAppCategory: Codable, Identifiable, Sendable {
+struct VibeAiAppCategory: Codable, Identifiable, Sendable {
     let id: String
     let title: String
 }
 
 /// App capability definition
-struct OmiAppCapability: Codable, Identifiable, Sendable {
+struct VibeAiAppCapability: Codable, Identifiable, Sendable {
     let id: String
     let title: String
     let description: String
 }
 
 /// App review
-struct OmiAppReview: Codable, Identifiable {
+struct VibeAiAppReview: Codable, Identifiable {
     var id: String { uid }
     let uid: String
     let score: Int
@@ -2913,13 +2913,13 @@ struct OmiAppReview: Codable, Identifiable {
 // MARK: - V2 Apps Response Types
 
 /// Capability info in v2/apps response
-struct OmiCapabilityInfo: Codable, Sendable {
+struct VibeAiCapabilityInfo: Codable, Sendable {
     let id: String
     let title: String
 }
 
 /// Pagination metadata in v2/apps response
-struct OmiPaginationMeta: Codable, Sendable {
+struct VibeAiPaginationMeta: Codable, Sendable {
     let total: Int
     let count: Int
     let offset: Int
@@ -2927,24 +2927,24 @@ struct OmiPaginationMeta: Codable, Sendable {
 }
 
 /// A single group in the v2/apps response
-struct OmiAppGroup: Codable, Sendable {
-    let capability: OmiCapabilityInfo
-    let data: [OmiApp]
-    let pagination: OmiPaginationMeta
+struct VibeAiAppGroup: Codable, Sendable {
+    let capability: VibeAiCapabilityInfo
+    let data: [VibeAiApp]
+    let pagination: VibeAiPaginationMeta
 }
 
 /// Metadata in v2/apps response
-struct OmiAppsV2Meta: Codable, Sendable {
-    let capabilities: [OmiCapabilityInfo]
+struct VibeAiAppsV2Meta: Codable, Sendable {
+    let capabilities: [VibeAiCapabilityInfo]
     let groupCount: Int
     let limit: Int
     let offset: Int
 }
 
 /// Full v2/apps grouped response
-struct OmiAppsV2Response: Codable, Sendable {
-    let groups: [OmiAppGroup]
-    let meta: OmiAppsV2Meta
+struct VibeAiAppsV2Response: Codable, Sendable {
+    let groups: [VibeAiAppGroup]
+    let meta: VibeAiAppsV2Meta
 }
 
 // MARK: - Apps API
@@ -2957,7 +2957,7 @@ extension APIClient {
         category: String? = nil,
         limit: Int = 50,
         offset: Int = 0
-    ) async throws -> [OmiApp] {
+    ) async throws -> [VibeAiApp] {
         var queryItems: [String] = [
             "limit=\(limit)",
             "offset=\(offset)"
@@ -2976,19 +2976,19 @@ extension APIClient {
     }
 
     /// Fetches popular apps
-    func getPopularApps() async throws -> [OmiApp] {
+    func getPopularApps() async throws -> [VibeAiApp] {
         return try await get("v1/apps/popular")
     }
 
     /// Fetches apps grouped by capability (v2 API - matches Flutter/Python backend)
     /// Returns groups: Featured, Integrations, Chat Assistants, Summary Apps, Realtime Notifications
-    func getAppsV2(offset: Int = 0, limit: Int = 100) async throws -> OmiAppsV2Response {
+    func getAppsV2(offset: Int = 0, limit: Int = 100) async throws -> VibeAiAppsV2Response {
         let endpoint = "v2/apps?offset=\(offset)&limit=\(limit)"
         return try await get(endpoint)
     }
 
     /// Fetches approved public apps
-    func getApprovedApps(limit: Int = 50, offset: Int = 0) async throws -> [OmiApp] {
+    func getApprovedApps(limit: Int = 50, offset: Int = 0) async throws -> [VibeAiApp] {
         let endpoint = "v1/approved-apps?limit=\(limit)&offset=\(offset)"
         return try await get(endpoint)
     }
@@ -3002,7 +3002,7 @@ extension APIClient {
         installedOnly: Bool = false,
         limit: Int = 50,
         offset: Int = 0
-    ) async throws -> [OmiApp] {
+    ) async throws -> [VibeAiApp] {
         var queryItems: [String] = [
             "limit=\(limit)",
             "offset=\(offset)"
@@ -3033,17 +3033,17 @@ extension APIClient {
     }
 
     /// Fetches app details by ID
-    func getAppDetails(appId: String) async throws -> OmiAppDetails {
+    func getAppDetails(appId: String) async throws -> VibeAiAppDetails {
         return try await get("v1/apps/\(appId)")
     }
 
     /// Fetches app reviews
-    func getAppReviews(appId: String) async throws -> [OmiAppReview] {
+    func getAppReviews(appId: String) async throws -> [VibeAiAppReview] {
         return try await get("v1/apps/\(appId)/reviews")
     }
 
     /// Fetches user's enabled apps
-    func getEnabledApps() async throws -> [OmiApp] {
+    func getEnabledApps() async throws -> [VibeAiApp] {
         return try await get("v1/apps/enabled")
     }
 
@@ -3074,7 +3074,7 @@ extension APIClient {
     }
 
     /// Submits a review for an app
-    func submitAppReview(appId: String, score: Int, review: String) async throws -> OmiAppReview {
+    func submitAppReview(appId: String, score: Int, review: String) async throws -> VibeAiAppReview {
         struct ReviewRequest: Encodable {
             let app_id: String
             let score: Int
@@ -3085,12 +3085,12 @@ extension APIClient {
     }
 
     /// Fetches all app categories
-    func getAppCategories() async throws -> [OmiAppCategory] {
+    func getAppCategories() async throws -> [VibeAiAppCategory] {
         return try await get("v1/app-categories")
     }
 
     /// Fetches all app capabilities
-    func getAppCapabilities() async throws -> [OmiAppCapability] {
+    func getAppCapabilities() async throws -> [VibeAiAppCapability] {
         return try await get("v1/app-capabilities")
     }
 
@@ -4400,7 +4400,7 @@ extension APIClient {
         }
     }
 
-    func fetchTotalOmiAICost() async -> Double? {
+    func fetchTotalVibeAiCost() async -> Double? {
         struct Res: Decodable { let total_cost_usd: Double }
         do {
             log("APIClient: Fetching total VibeAi cost from backend")

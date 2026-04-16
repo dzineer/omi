@@ -9,7 +9,7 @@ class ScreenCaptureManager {
             return nil
         }
         let screenshotsDirectory = documentsDirectory
-            .appendingPathComponent("Omi")
+            .appendingPathComponent("VibeAi")
             .appendingPathComponent("Screenshots")
 
         do {

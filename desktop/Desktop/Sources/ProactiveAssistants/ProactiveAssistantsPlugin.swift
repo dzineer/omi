@@ -129,8 +129,7 @@ public class ProactiveAssistantsPlugin: NSObject {
         let envPaths = [
             Bundle.main.path(forResource: ".env", ofType: nil),
             FileManager.default.currentDirectoryPath + "/.env",
-            NSHomeDirectory() + "/.omi.env",
-            NSHomeDirectory() + "/.hartford.env"
+            NSHomeDirectory() + "/.vibeai.env",
         ].compactMap { $0 }
 
         for path in envPaths {
@@ -833,7 +832,7 @@ public class ProactiveAssistantsPlugin: NSObject {
         DistributedNotificationCenter.default().addObserver(
             self,
             selector: #selector(handleAdviceTestNotification(_:)),
-            name: NSNotification.Name("com.omi.test.advice"),
+            name: NSNotification.Name("com.vibeaiglobal.vibeai.test.advice"),
             object: nil
         )
         log("AdviceTestCLI: Notification observer registered")

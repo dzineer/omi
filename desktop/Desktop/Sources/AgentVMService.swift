@@ -158,7 +158,7 @@ actor AgentVMService {
         await uploadDatabase(vmIP: vmIP, authToken: authToken)
     }
 
-    /// Upload the local omi.db (gzip-compressed) to the VM's /upload endpoint.
+    /// Upload the local vibeai.db (gzip-compressed) to the VM's /upload endpoint.
     /// Pauses AgentSync during upload to prevent competing for memory and network.
     private func uploadDatabase(vmIP: String, authToken: String) async {
         await AgentSyncService.shared.pause()
@@ -168,10 +168,10 @@ actor AgentVMService {
             let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             let userId = RewindDatabase.currentUserId ?? "anonymous"
             return appSupport
-                .appendingPathComponent("Omi", isDirectory: true)
+                .appendingPathComponent("VibeAi", isDirectory: true)
                 .appendingPathComponent("users", isDirectory: true)
                 .appendingPathComponent(userId, isDirectory: true)
-                .appendingPathComponent("omi.db")
+                .appendingPathComponent("vibeai.db")
         }
 
         guard FileManager.default.fileExists(atPath: dbPath.path) else {

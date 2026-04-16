@@ -325,7 +325,7 @@ actor ClaudeCodeBridge: ChatBridge {
         // Execute tool via Swift callback (for vibeai-tools/local tools)
         // or auto-approve Claude Code's built-in tools
         let callId = toolUseId ?? requestId
-        if isOmiLocalTool(toolName) {
+        if isVibeAiLocalTool(toolName) {
           // Route to Swift-side execution
           let toolResult = await onToolCall(callId, toolName, input)
           sendControlResponse(requestId: requestId, approved: true, result: toolResult)
@@ -768,8 +768,8 @@ actor ClaudeCodeBridge: ChatBridge {
   // MARK: - Private: Tool Classification
 
   /// Returns true if this is an Omi-local tool that should be executed Swift-side
-  private func isOmiLocalTool(_ name: String) -> Bool {
-    let omiTools: Set<String> = [
+  private func isVibeAiLocalTool(_ name: String) -> Bool {
+    let vibeAiTools: Set<String> = [
       "execute_sql", "semantic_search",
       "complete_task", "delete_task",
       "get_daily_recap",
@@ -778,7 +778,7 @@ actor ClaudeCodeBridge: ChatBridge {
       "set_user_preferences", "ask_followup",
       "complete_onboarding", "save_knowledge_graph",
     ]
-    return omiTools.contains(name)
+    return vibeAiTools.contains(name)
   }
 
   // MARK: - Private: Pipe I/O

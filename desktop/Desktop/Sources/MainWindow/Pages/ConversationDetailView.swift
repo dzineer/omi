@@ -18,7 +18,7 @@ struct ConversationDetailView: View {
     @StateObject private var appProvider = AppProvider()
     @State private var showAppSelector = false
     @State private var isReprocessing = false
-    @State private var selectedAppForReprocess: OmiApp?
+    @State private var selectedAppForReprocess: VibeAiApp?
 
     // Transcript drawer state (replaces tab system)
     @State private var showTranscriptDrawer = false
@@ -842,7 +842,7 @@ struct ConversationDetailView: View {
 
     // MARK: - Reprocess
 
-    private func reprocessWithApp(_ app: OmiApp) async {
+    private func reprocessWithApp(_ app: VibeAiApp) async {
         isReprocessing = true
         defer {
             isReprocessing = false
@@ -942,7 +942,7 @@ extension ServerConversation {
 
 struct AppResultCard: View {
     let result: AppResponse
-    let app: OmiApp?
+    let app: VibeAiApp?
 
     @State private var isExpanded = false
 
@@ -1052,7 +1052,7 @@ struct AppResultCard: View {
 // MARK: - Suggested App Card
 
 struct SuggestedAppCard: View {
-    let app: OmiApp
+    let app: VibeAiApp
     let isLoading: Bool
     let onTap: () -> Void
 
@@ -1109,9 +1109,9 @@ struct SuggestedAppCard: View {
 // MARK: - App Selector Sheet
 
 struct AppSelectorSheet: View {
-    let apps: [OmiApp]
+    let apps: [VibeAiApp]
     let isLoading: Bool
-    let onSelect: (OmiApp) -> Void
+    let onSelect: (VibeAiApp) -> Void
     let onDismiss: () -> Void
 
     @State private var selectedAppId: String?
@@ -1181,7 +1181,7 @@ struct AppSelectorSheet: View {
 }
 
 struct AppSelectorRow: View {
-    let app: OmiApp
+    let app: VibeAiApp
     let isSelected: Bool
     let isLoading: Bool
     let onSelect: () -> Void

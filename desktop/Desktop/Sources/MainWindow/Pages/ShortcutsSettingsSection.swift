@@ -14,7 +14,7 @@ struct ShortcutsSettingsSection: View {
             aiModelCard
             backgroundStyleCard
             draggableBarCard
-            askOmiKeyCard
+            askVibeAiKeyCard
             pttKeyCard
             pttTranscriptionModeCard
             doubleTapCard
@@ -121,7 +121,7 @@ struct ShortcutsSettingsSection: View {
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.draggable", highlightedSettingId: $highlightedSettingId))
     }
 
-    private var askOmiKeyCard: some View {
+    private var askVibeAiKeyCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Ask VibeAi Shortcut")
@@ -133,8 +133,8 @@ struct ShortcutsSettingsSection: View {
             }
 
             HStack(spacing: 12) {
-                ForEach(ShortcutSettings.AskOmiKey.allCases, id: \.self) { key in
-                    askOmiKeyButton(key)
+                ForEach(ShortcutSettings.AskVibeAiKey.allCases, id: \.self) { key in
+                    askVibeAiKeyButton(key)
                 }
                 Spacer()
             }
@@ -147,10 +147,10 @@ struct ShortcutsSettingsSection: View {
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.shortcut", highlightedSettingId: $highlightedSettingId))
     }
 
-    private func askOmiKeyButton(_ key: ShortcutSettings.AskOmiKey) -> some View {
-        let isSelected = settings.askOmiKey == key
+    private func askVibeAiKeyButton(_ key: ShortcutSettings.AskVibeAiKey) -> some View {
+        let isSelected = settings.askVibeAiKey == key
         return Button {
-            settings.askOmiKey = key
+            settings.askVibeAiKey = key
         } label: {
             Text(key.rawValue)
                 .scaledFont(size: 13, weight: .medium)
@@ -327,7 +327,7 @@ struct ShortcutsSettingsSection: View {
                 .scaledFont(size: 16, weight: .semibold)
                 .foregroundColor(VibeAIColors.textPrimary)
 
-            shortcutRow(label: "Ask VibeAi", keys: settings.askOmiKey.rawValue)
+            shortcutRow(label: "Ask VibeAi", keys: settings.askVibeAiKey.rawValue)
             shortcutRow(label: "Toggle floating bar", keys: "\u{2318}\\")
             shortcutRow(label: "Push to talk", keys: settings.pttKey.symbol + " hold")
             if settings.doubleTapForLock {

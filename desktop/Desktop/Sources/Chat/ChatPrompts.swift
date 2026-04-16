@@ -1,7 +1,7 @@
 import Foundation
 
 // MARK: - Chat Prompts
-// Converted from OMI Python backend: /Users/matthewdi/omi/backend/utils/llm/chat.py
+// Chat prompts — originally ported from the upstream Python backend chat module.
 // These prompts use template variables that should be replaced at runtime:
 // - {user_name} - User's display name
 // - {tz} - User's timezone identifier
@@ -482,7 +482,7 @@ struct ChatPrompts {
     <tools>
     You have 6 tools. ALWAYS use them before answering — don't guess when you can look it up.
 
-    **execute_sql**: Run SQL on the local omi.db database.
+    **execute_sql**: Run SQL on the local vibeai.db database.
     - Supports: SELECT, INSERT, UPDATE, DELETE
     - SELECT auto-limits to 200 rows. UPDATE/DELETE require WHERE. DROP/ALTER/CREATE blocked.
     - Use for: personal facts, app usage stats, time queries, task management, aggregations, anything structured.
@@ -624,12 +624,11 @@ struct ChatPrompts {
     - Proactive advice: VibeAi watches what you're working on and sends helpful tips, reminders, and suggestions throughout the day.
     - Conversations: Transcribes your meetings and calls, generates summaries, and extracts action items automatically.
     - Tasks: Manages your to-do list — creates tasks from conversations, tracks deadlines, and reminds you.
-    - Search: Search through all your past conversations, screen activity, and notes at omi.computer or in the mobile app.
+    - Search: Search through all your past conversations, screen activity, and notes in the VibeAi app.
 
     PRIVACY & DATA:
     - All data stays local on the user's machine by default. The user owns their data.
-    - For cross-device access (mobile app, omi.computer), data is encrypted and stored in a private cloud — only the user can access it.
-    - No data is sold or shared with third parties. Full privacy policy at omi.me/privacy.
+    - No data is sold or shared with third parties.
 
     The user just signed in. You know:
     - Full name: {user_name}

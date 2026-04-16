@@ -53,10 +53,10 @@ class NotificationService: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationService()
 
     /// Category ID for notifications that track dismissal
-    private static let trackableCategoryId = "omi.trackable"
+    private static let trackableCategoryId = "vibeai.trackable"
 
     /// Category ID for screen capture reset notifications with action button
-    private static let screenCaptureResetCategoryId = "omi.screen_capture_reset"
+    private static let screenCaptureResetCategoryId = "vibeai.screen_capture_reset"
 
     /// Action ID for the "Reset Now" button
     private static let resetNowActionId = "RESET_SCREEN_CAPTURE_NOW"

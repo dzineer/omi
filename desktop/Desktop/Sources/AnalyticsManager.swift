@@ -823,7 +823,7 @@ class AnalyticsManager {
         // -- Launch at Login --
         props["launch_at_login_enabled"] = LaunchAtLoginManager.shared.isEnabled
 
-        // -- Floating Bar (AskOmi) --
+        // -- Floating Bar (AskVibeAi) --
         props["floating_bar_enabled"] = FloatingControlBarManager.shared.isEnabled
         props["floating_bar_visible"] = FloatingControlBarManager.shared.isVisible
 
@@ -846,14 +846,14 @@ class AnalyticsManager {
     }
 
     /// Track when Ask VibeAi is opened (AI input panel shown)
-    func floatingBarAskOmiOpened(source: String) {
+    func floatingBarAskVibeAiOpened(source: String) {
         let props: [String: Any] = ["source": source]
         MixpanelManager.shared.track("Floating Bar Ask VibeAi Opened", properties: props.compactMapValues { $0 as? MixpanelType })
         PostHogManager.shared.track("floating_bar_ask_vibe_ai_opened", properties: props)
     }
 
     /// Track when the AI conversation is closed
-    func floatingBarAskOmiClosed() {
+    func floatingBarAskVibeAiClosed() {
         MixpanelManager.shared.track("Floating Bar Ask VibeAi Closed")
         PostHogManager.shared.track("floating_bar_ask_vibe_ai_closed")
     }

@@ -50,7 +50,7 @@ final class WALService: ObservableObject {
 
     // MARK: - Properties
 
-    private let logger = Logger(subsystem: "me.omi.desktop", category: "WALService")
+    private let logger = Logger(subsystem: "com.vibeaiglobal.vibeai", category: "WALService")
     private let fileManager = FileManager.default
 
     private var walDirectory: URL?
@@ -79,7 +79,7 @@ final class WALService: ObservableObject {
             return
         }
 
-        let walDir = appSupport.appendingPathComponent("me.omi.desktop/wals", isDirectory: true)
+        let walDir = appSupport.appendingPathComponent("com.vibeaiglobal.vibeai/wals", isDirectory: true)
 
         do {
             try fileManager.createDirectory(at: walDir, withIntermediateDirectories: true)

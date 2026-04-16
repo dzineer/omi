@@ -829,11 +829,11 @@ extension GeminiClient {
   /// Available chat tools
   static let chatTools: [GeminiTool] = [
     GeminiTool(functionDeclarations: [
-      // Execute SQL on local omi.db
+      // Execute SQL on local vibeai.db
       GeminiTool.FunctionDeclaration(
         name: "execute_sql",
         description:
-          "Execute a SQL query on the local omi.db database. Supports SELECT, INSERT, UPDATE, DELETE. Use this for any structured data lookup — app usage, screenshots, tasks, conversations, time-based queries, aggregations, etc. The system prompt contains the full database schema.",
+          "Execute a SQL query on the local vibeai.db database. Supports SELECT, INSERT, UPDATE, DELETE. Use this for any structured data lookup — app usage, screenshots, tasks, conversations, time-based queries, aggregations, etc. The system prompt contains the full database schema.",
         parameters: GeminiTool.FunctionDeclaration.Parameters(
           type: "object",
           properties: [

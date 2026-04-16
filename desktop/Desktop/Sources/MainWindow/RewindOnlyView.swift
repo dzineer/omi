@@ -47,7 +47,7 @@ struct RewindOnlyView: View {
             // Force dark appearance on the window
             DispatchQueue.main.async {
                 for window in NSApp.windows {
-                    if window.title.contains("Rewind") || window.title.hasPrefix("Omi") || window.title.hasPrefix("Vibe") {
+                    if window.title.contains("Rewind") || window.title.hasPrefix("Vibe") {
                         window.appearance = NSAppearance(named: .darkAqua)
                     }
                 }
@@ -294,7 +294,7 @@ struct RewindSettingsView: View {
                         .scaledFont(size: 13)
                         .foregroundColor(.white.opacity(0.7))
 
-                    Text("~/Library/Application Support/Omi/users/\(UserDefaults.standard.string(forKey: "auth_userId") ?? "")/")
+                    Text("~/Library/Application Support/VibeAi/users/\(UserDefaults.standard.string(forKey: "auth_userId") ?? "")/")
                         .scaledFont(size: 11, design: .monospaced)
                         .foregroundColor(.white.opacity(0.4))
                 }
@@ -303,7 +303,7 @@ struct RewindSettingsView: View {
 
                 Button("Show in Finder") {
                     let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-                        .appendingPathComponent("Omi")
+                        .appendingPathComponent("VibeAi")
                     if let url = url {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: url.path)
                     }

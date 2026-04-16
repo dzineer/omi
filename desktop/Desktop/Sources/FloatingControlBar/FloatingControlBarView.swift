@@ -103,7 +103,7 @@ struct FloatingControlBarView: View {
     private func openFloatingBarSettings() {
         // Bring main window to front and navigate to floating bar settings
         NSApp.activate(ignoringOtherApps: true)
-        for window in NSApp.windows where window.title.hasPrefix("Omi") || window.title.hasPrefix("Vibe") {
+        for window in NSApp.windows where window.title.hasPrefix("Vibe") {
             window.makeKeyAndOrderFront(nil)
             break
         }
@@ -120,7 +120,7 @@ struct FloatingControlBarView: View {
                     .transition(.opacity)
             } else if isHovering || state.showingAIConversation {
                 VStack(spacing: 1) {
-                    compactButton(title: "Ask VibeAi", keys: shortcutSettings.askOmiKey.hintKeys) {
+                    compactButton(title: "Ask VibeAi", keys: shortcutSettings.askVibeAiKey.hintKeys) {
                         onAskAI()
                     }
 

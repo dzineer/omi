@@ -62,11 +62,11 @@ class AudioCaptureService: @unchecked Sendable {
 
     // Device change handling
     private var isReconfiguring = false
-    private let listenerQueue = DispatchQueue(label: "com.omi.audiocapture.listener")
+    private let listenerQueue = DispatchQueue(label: "com.vibeaiglobal.vibeai.audiocapture.listener")
 
     /// Dedicated queue for CoreAudio device operations (start/stop/reconfigure)
     /// to avoid blocking the main thread on AudioDeviceStart/Stop calls.
-    private let audioQueue = DispatchQueue(label: "com.omi.audiocapture.device")
+    private let audioQueue = DispatchQueue(label: "com.vibeaiglobal.vibeai.audiocapture.device")
 
     // MARK: - Public Methods
 

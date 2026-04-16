@@ -83,7 +83,7 @@ class TaskAgentManager: ObservableObject {
             return
         }
 
-        let sessionName = "omi-task-\(task.id.prefix(8))"
+        let sessionName = "vibeai-task-\(task.id.prefix(8))"
         let prompt = buildPrompt(for: task, context: context)
 
         logMessage("TaskAgentManager: Launching agent for task \(task.id) (\(task.description))")
@@ -247,7 +247,7 @@ class TaskAgentManager: ObservableObject {
 
         // Write prompt to a temp file to avoid escaping issues
         let tempDir = FileManager.default.temporaryDirectory
-        let promptFile = tempDir.appendingPathComponent("omi-task-prompt-\(UUID().uuidString).txt")
+        let promptFile = tempDir.appendingPathComponent("vibeai-task-prompt-\(UUID().uuidString).txt")
         try prompt.write(to: promptFile, atomically: true, encoding: .utf8)
 
         // Escape working directory for shell
@@ -496,7 +496,7 @@ class TaskAgentManager: ObservableObject {
         }
 
         // Create flag file to skip .zshrc auto-resume (which hijacks the shell via exec)
-        let flagPath = "/tmp/.omi-skip-resume"
+        let flagPath = "/tmp/.vibeai-skip-resume"
         FileManager.default.createFile(atPath: flagPath, contents: nil)
 
         let script = """

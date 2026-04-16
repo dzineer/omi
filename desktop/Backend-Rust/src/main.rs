@@ -48,12 +48,12 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() {
-    // Open log file (same as Swift dev app: /tmp/omi-dev.log)
+    // Open log file (same as Swift dev app: /tmp/vibeai-dev.log)
     // Wrap in LineWriter to flush after each line (ensures logs appear immediately)
     let log_file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("/tmp/omi-dev.log")
+        .open("/tmp/vibeai-dev.log")
         .expect("Failed to open log file");
     let line_writer = LineWriter::new(log_file);
 
@@ -65,7 +65,7 @@ async fn main() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "omi_desktop_backend=info,tower_http=info".into()),
+                .unwrap_or_else(|_| "vibeai_desktop_backend=info,tower_http=info".into()),
         )
         // Stdout layer
         .with(
@@ -162,7 +162,7 @@ async fn main() {
 
     // Initialize Eidetic Memory service (local knowledge graph)
     let memory_service = Arc::new(MemoryService::new());
-    tracing::info!("Eidetic Memory initialized (graph: ~/.omi/memory/graph.json)");
+    tracing::info!("Eidetic Memory initialized (graph: ~/.vibeai/memory/graph.json)");
 
     // Create app state
     let state = AppState {

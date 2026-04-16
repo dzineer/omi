@@ -69,7 +69,7 @@ pkill -f "$APP_NAME.app" 2>/dev/null || true
 pkill -f "cloudflared.*omi-computer-dev" 2>/dev/null || true
 # Kill only the Rust backend on port 8080 (not other apps that might use it)
 lsof -ti:8080 -sTCP:LISTEN 2>/dev/null | while read pid; do
-    if ps -p "$pid" -o command= 2>/dev/null | grep -q "omi-backend\|Backend-Rust\|target/"; then
+    if ps -p "$pid" -o command= 2>/dev/null | grep -q "vibeai-desktop-backend\|omi-backend\|Backend-Rust\|target/"; then
         kill -9 "$pid" 2>/dev/null || true
     fi
 done
@@ -137,12 +137,12 @@ if [ ! -f "google-credentials.json" ] && [ -f "../Backend/google-credentials.jso
 fi
 
 # Build if binary doesn't exist or source is newer
-if [ ! -f "target/release/omi-desktop-backend" ] || [ -n "$(find src -newer target/release/omi-desktop-backend 2>/dev/null)" ]; then
+if [ ! -f "target/release/vibeai-desktop-backend" ] || [ -n "$(find src -newer target/release/vibeai-desktop-backend 2>/dev/null)" ]; then
     step "Building Rust backend (cargo build --release)..."
     cargo build --release
 fi
 
-./target/release/omi-desktop-backend &
+./target/release/vibeai-desktop-backend &
 BACKEND_PID=$!
 cd - > /dev/null
 

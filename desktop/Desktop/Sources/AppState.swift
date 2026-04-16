@@ -406,11 +406,7 @@ class AppState: ObservableObject {
         let envPaths = [
             Bundle.main.path(forResource: ".env", ofType: nil),
             FileManager.default.currentDirectoryPath + "/.env",
-            NSHomeDirectory() + "/.hartford.env",
-            NSHomeDirectory() + "/.omi.env",
-            // Explicit paths for development
-            "/Users/matthewdi/omi-computer-swift/.env",
-            "/Users/matthewdi/omi/backend/.env"
+            NSHomeDirectory() + "/.vibeai.env",
         ].compactMap { $0 }
 
         for path in envPaths {

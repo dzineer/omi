@@ -90,7 +90,7 @@ class ChatToolExecutor {
         "DROP", "ALTER", "CREATE", "PRAGMA", "ATTACH", "DETACH", "VACUUM"
     ]
 
-    /// Execute a SQL query on omi.db
+    /// Execute a SQL query on vibeai.db
     private static func executeSQL(_ args: [String: Any]) async -> String {
         guard let query = args["query"] as? String, !query.isEmpty else {
             return "Error: query is required"

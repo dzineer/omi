@@ -242,7 +242,7 @@ final class ScreenCaptureService: Sendable {
   /// This removes the TCC entry entirely — user must re-grant in System Settings.
   /// Only use as a last resort when soft recovery has already failed.
   static func resetScreenCapturePermission() -> Bool {
-    let bundleId = Bundle.main.bundleIdentifier ?? "com.omi.computer-macos"
+    let bundleId = Bundle.main.bundleIdentifier ?? "com.vibeaiglobal.vibeai"
     log("Resetting screen capture permission for \(bundleId) via tccutil (hard reset)...")
 
     let process = Process()

@@ -577,7 +577,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     icon.isTemplate = true
                     button.image = icon
                 }
-            } else if let iconURL = Bundle.resourceBundle.url(forResource: "omi_text_logo", withExtension: "png"),
+            } else if let iconURL = Bundle.resourceBundle.url(forResource: "vibeai_text_logo", withExtension: "png"),
                       let icon = NSImage(contentsOf: iconURL) {
                 icon.isTemplate = true
                 let aspect = icon.size.width / icon.size.height
@@ -635,7 +635,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     button.image = icon
                     log("AppDelegate: [MENUBAR] Rewind icon set successfully")
                 }
-            } else if let iconURL = Bundle.resourceBundle.url(forResource: "omi_text_logo", withExtension: "png"),
+            } else if let iconURL = Bundle.resourceBundle.url(forResource: "vibeai_text_logo", withExtension: "png"),
                       let icon = NSImage(contentsOf: iconURL) {
                 icon.isTemplate = true
                 // Scale to menu bar height (16pt) with proportional width
@@ -650,7 +650,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     icon.isTemplate = true
                     button.image = icon
                 }
-                log("AppDelegate: [MENUBAR] WARNING - Failed to load omi_text_logo, using fallback")
+                log("AppDelegate: [MENUBAR] WARNING - Failed to load vibeai_text_logo, using fallback")
             }
             button.toolTip = VibeAIApp.launchMode == .rewind ? "Vibe AI Rewind" : displayName
         } else {
@@ -747,7 +747,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @MainActor @objc private func openVibeAIFromMenu() {
-        AnalyticsManager.shared.menuBarActionClicked(action: "open_omi")
+        AnalyticsManager.shared.menuBarActionClicked(action: "open_vibeai")
         NSApp.activate(ignoringOtherApps: true)
         var foundWindow = false
         for window in NSApp.windows {

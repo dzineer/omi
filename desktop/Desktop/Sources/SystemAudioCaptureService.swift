@@ -67,7 +67,7 @@ class SystemAudioCaptureService: @unchecked Sendable {
 
     /// Dedicated queue for CoreAudio device operations (start/stop)
     /// to avoid blocking the main thread on AudioDeviceStart/Stop calls.
-    private let audioQueue = DispatchQueue(label: "com.omi.systemaudiocapture.device")
+    private let audioQueue = DispatchQueue(label: "com.vibeaiglobal.vibeai.systemaudiocapture.device")
 
     // MARK: - Permission Checking
 
@@ -141,7 +141,7 @@ class SystemAudioCaptureService: @unchecked Sendable {
         // 3. Create aggregate device with tap
         let aggregateDescription: [String: Any] = [
             kAudioAggregateDeviceNameKey as String: "OMI System Audio Tap Device",
-            kAudioAggregateDeviceUIDKey as String: "omi.systemaudio.\(tapUUID.uuidString)",
+            kAudioAggregateDeviceUIDKey as String: "vibeai.systemaudio.\(tapUUID.uuidString)",
             kAudioAggregateDeviceIsPrivateKey as String: true,
             kAudioAggregateDeviceTapListKey as String: [
                 [kAudioSubTapUIDKey as String: tapUUID.uuidString]

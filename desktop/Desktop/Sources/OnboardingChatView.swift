@@ -316,7 +316,7 @@ struct OnboardingChatView: View {
     }
 
     @ViewBuilder
-    private var omiAvatar: some View {
+    private var vibeAiAvatar: some View {
         if let logoURL = Bundle.resourceBundle.url(forResource: "herologo", withExtension: "png"),
            let logoImage = NSImage(contentsOf: logoURL) {
             Image(nsImage: logoImage)
@@ -546,18 +546,7 @@ struct OnboardingChatView: View {
         // Start transcription if microphone is available
         appState.startTranscription()
 
-        // Create welcome task (skip if it already exists from a previous onboarding)
-        Task {
-            let welcomeDescription = "Run VibeAi for two days to start receiving helpful advice"
-            let alreadyExists = await ActionItemStorage.shared.actionItemExists(description: welcomeDescription)
-            if !alreadyExists {
-                await TasksStore.shared.createTask(
-                    description: welcomeDescription,
-                    dueAt: Date(),
-                    priority: "low"
-                )
-            }
-        }
+
 
         // Send welcome notification
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -742,7 +731,7 @@ struct OnboardingChatView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             NSApp.activate(ignoringOtherApps: true)
             for window in NSApp.windows {
-                if window.title.hasPrefix("Omi") || window.title.hasPrefix("Vibe") {
+                if window.title.hasPrefix("Vibe") {
                     window.makeKeyAndOrderFront(nil)
                     window.orderFrontRegardless()
                 }

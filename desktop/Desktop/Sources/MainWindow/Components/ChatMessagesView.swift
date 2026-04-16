@@ -73,7 +73,7 @@ struct ChatMessagesView<WelcomeContent: View>: View {
     let hasMoreMessages: Bool
     let isLoadingMoreMessages: Bool
     let isLoadingInitial: Bool
-    let app: OmiApp?
+    let app: VibeAiApp?
     let onLoadMore: () async -> Void
     let onRate: (String, Int?) -> Void
     var onCitationTap: ((Citation) -> Void)? = nil
@@ -223,7 +223,7 @@ struct ChatMessagesView<WelcomeContent: View>: View {
                     .scaleEffect(0.8)
                 Text("Loading...")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textTertiary)
+                    .foregroundColor(VibeAIColors.textTertiary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 80)
@@ -255,27 +255,27 @@ struct ChatMessagesView<WelcomeContent: View>: View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
                 .scaledFont(size: 40)
-                .foregroundColor(OmiColors.warning)
+                .foregroundColor(VibeAIColors.warning)
 
             Text("Failed to load chats")
                 .scaledFont(size: 16, weight: .medium)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
 
             Text(error)
                 .scaledFont(size: 14)
-                .foregroundColor(OmiColors.textTertiary)
+                .foregroundColor(VibeAIColors.textTertiary)
                 .multilineTextAlignment(.center)
 
             if let onRetry {
                 Button(action: onRetry) {
                     Text("Try Again")
                         .scaledFont(size: 14, weight: .medium)
-                        .foregroundColor(OmiColors.textPrimary)
+                        .foregroundColor(VibeAIColors.textPrimary)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(OmiColors.purplePrimary)
+                                .fill(VibeAIColors.purplePrimary)
                         )
                 }
                 .buttonStyle(.plain)
@@ -324,10 +324,10 @@ struct ChatMessagesView<WelcomeContent: View>: View {
             } label: {
                 Image(systemName: "arrow.down.circle.fill")
                     .scaledFont(size: 32)
-                    .foregroundColor(OmiColors.purplePrimary)
+                    .foregroundColor(VibeAIColors.purplePrimary)
                     .background(
                         Circle()
-                            .fill(OmiColors.backgroundPrimary)
+                            .fill(VibeAIColors.backgroundPrimary)
                             .frame(width: 28, height: 28)
                     )
                     .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)

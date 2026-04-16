@@ -118,14 +118,14 @@ actor RewindDatabase {
         try await initialize()
     }
 
-    /// Returns the per-user base directory: ~/Library/Application Support/Omi/users/{userId}/
+    /// Returns the per-user base directory: ~/Library/Application Support/VibeAi/users/{userId}/
     /// Falls back to the static currentUserId (set synchronously at app start) when
     /// configure() hasn't been called yet (e.g., TierManager triggers init early).
     private func userBaseDirectory() -> URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let userId = configuredUserId ?? RewindDatabase.currentUserId ?? "anonymous"
         return appSupport
-            .appendingPathComponent("Omi", isDirectory: true)
+            .appendingPathComponent("VibeAi", isDirectory: true)
             .appendingPathComponent("users", isDirectory: true)
             .appendingPathComponent(userId, isDirectory: true)
     }
@@ -135,7 +135,7 @@ actor RewindDatabase {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let userId = currentUserId ?? "anonymous"
         return appSupport
-            .appendingPathComponent("Omi", isDirectory: true)
+            .appendingPathComponent("VibeAi", isDirectory: true)
             .appendingPathComponent("users", isDirectory: true)
             .appendingPathComponent(userId, isDirectory: true)
     }
@@ -145,14 +145,14 @@ actor RewindDatabase {
     /// This is nonisolated so it can be called synchronously from the main thread during termination.
     nonisolated static func markCleanShutdown() {
         let userDir = staticUserBaseDirectory()
-        let flagPath = userDir.appendingPathComponent(".omi_running").path
+        let flagPath = userDir.appendingPathComponent(".vibeai_running").path
         try? FileManager.default.removeItem(atPath: flagPath)
         log("RewindDatabase: Clean shutdown flagged")
     }
 
     /// Check if the previous session ended with an unclean shutdown (crash, force quit, etc.)
     func hadUncleanShutdown() -> Bool {
-        let flagPath = userBaseDirectory().appendingPathComponent(".omi_running").path
+        let flagPath = userBaseDirectory().appendingPathComponent(".vibeai_running").path
         return FileManager.default.fileExists(atPath: flagPath)
     }
 
@@ -212,16 +212,13 @@ actor RewindDatabase {
     private func performInitialization() async throws {
         guard dbQueue == nil else { return }
 
-        let omiDir = userBaseDirectory()
+        let vibeAiDir = userBaseDirectory()
 
         // Create directory if needed (withIntermediateDirectories creates parents too)
-        try FileManager.default.createDirectory(at: omiDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: vibeAiDir, withIntermediateDirectories: true)
 
-        // Migrate data from legacy path if this is first launch with per-user paths
-        migrateFromLegacyPathIfNeeded(to: omiDir)
-
-        let dbPath = omiDir.appendingPathComponent("omi.db").path
-        let flagPath = omiDir.appendingPathComponent(".omi_running").path
+        let dbPath = vibeAiDir.appendingPathComponent("vibeai.db").path
+        let flagPath = vibeAiDir.appendingPathComponent(".vibeai_running").path
         runningFlagPath = flagPath
         log("RewindDatabase: Opening database at \(dbPath)")
 
@@ -286,7 +283,7 @@ actor RewindDatabase {
 
                 if isCorrupted && FileManager.default.fileExists(atPath: dbPath) {
                     log("RewindDatabase: Database is corrupted (error: \(retryError)), attempting recovery...")
-                    try await handleCorruptedDatabase(at: dbPath, in: omiDir)
+                    try await handleCorruptedDatabase(at: dbPath, in: vibeAiDir)
                     // Retry with recovered or fresh database
                     queue = try DatabasePool(path: dbPath, configuration: config)
                 } else {
@@ -344,142 +341,6 @@ actor RewindDatabase {
         log("RewindDatabase: Initialized successfully")
     }
 
-    // MARK: - Legacy Migration
-
-    /// Migrate data from the legacy shared path (Omi/) or from the anonymous fallback
-    /// (Omi/users/anonymous/) to the per-user path (Omi/users/{userId}/).
-    /// Handles both first-time migration (DB move) and partial re-runs (directory merges).
-    private func migrateFromLegacyPathIfNeeded(to userDir: URL) {
-        let fileManager = FileManager.default
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let omiDir = appSupport.appendingPathComponent("Omi", isDirectory: true)
-
-        // Determine migration source: prefer legacy root (Omi/omi.db), fall back to anonymous dir.
-        // The anonymous fallback covers the case where TierManager or another early caller
-        // triggered initialize() before configure(userId:) was called, causing data to land
-        // in users/anonymous/ instead of the real user's directory.
-        let legacyDB = omiDir.appendingPathComponent("omi.db")
-        let anonymousDir = omiDir
-            .appendingPathComponent("users", isDirectory: true)
-            .appendingPathComponent("anonymous", isDirectory: true)
-
-        let effectiveUserId = configuredUserId ?? RewindDatabase.currentUserId ?? "anonymous"
-        let sourceDir: URL
-        if fileManager.fileExists(atPath: legacyDB.path) {
-            sourceDir = omiDir
-        } else if effectiveUserId != "anonymous",
-                  fileManager.fileExists(atPath: anonymousDir.path) {
-            // Check if anonymous dir has anything worth migrating (DB, Videos, Screenshots, backups)
-            let hasContent = ["omi.db", "Screenshots", "Videos", "backups"].contains {
-                fileManager.fileExists(atPath: anonymousDir.appendingPathComponent($0).path)
-            }
-            guard hasContent else { return }
-            sourceDir = anonymousDir
-        } else {
-            return // Nothing to migrate
-        }
-
-        // Don't migrate to ourselves
-        guard sourceDir.path != userDir.path else { return }
-
-        log("RewindDatabase: Migrating data from \(sourceDir.path) to \(userDir.path)")
-
-        // Items to migrate: omi.db, Screenshots/, Videos/, backups/
-        // IMPORTANT: Do NOT move omi.db-wal, omi.db-shm, or .omi_running:
-        //   - WAL/SHM files are path-bound. Moving them to a new directory makes them
-        //     invalid, causing SQLITE_IOERR_CORRUPTFS (error 6922) on the next open.
-        //     SQLite will cleanly recover without stale WAL files.
-        //   - .omi_running would falsely trigger unclean-shutdown recovery at the
-        //     destination, running an expensive integrity check on the migrated DB.
-        let itemsToMove = [
-            "omi.db", "Screenshots", "Videos", "backups",
-        ]
-
-        // Checkpoint WAL at destination before deleting — preserves recent writes
-        // (e.g. knowledge graph saved during onboarding, before app restart for permissions)
-        let destDB = userDir.appendingPathComponent("omi.db")
-        if fileManager.fileExists(atPath: destDB.path) {
-            let destWAL = userDir.appendingPathComponent("omi.db-wal")
-            if fileManager.fileExists(atPath: destWAL.path) {
-                do {
-                    let config = Configuration()
-                    let pool = try DatabasePool(path: destDB.path, configuration: config)
-                    try pool.write { db in
-                        try db.execute(sql: "PRAGMA wal_checkpoint(TRUNCATE)")
-                    }
-                    try pool.close()
-                    log("RewindDatabase: Checkpointed WAL at dest before migration")
-                } catch {
-                    log("RewindDatabase: WAL checkpoint failed: \(error.localizedDescription)")
-                }
-            }
-        }
-
-        // Delete WAL/SHM and running flag at source AND destination — do NOT migrate them.
-        // Stale WAL/SHM at the destination (from a prior partial migration or crash) would
-        // also cause SQLITE_IOERR_CORRUPTFS when SQLite opens the migrated DB.
-        for staleFile in ["omi.db-wal", "omi.db-shm", ".omi_running"] {
-            for dir in [sourceDir, userDir] {
-                let path = dir.appendingPathComponent(staleFile)
-                if fileManager.fileExists(atPath: path.path) {
-                    try? fileManager.removeItem(at: path)
-                    let label = dir == sourceDir ? "source" : "dest"
-                    log("RewindDatabase: Deleted \(staleFile) from \(label) (not migrating)")
-                }
-            }
-        }
-
-        for name in itemsToMove {
-            let source = sourceDir.appendingPathComponent(name)
-            let dest = userDir.appendingPathComponent(name)
-            guard fileManager.fileExists(atPath: source.path) else { continue }
-
-            var isDir: ObjCBool = false
-            fileManager.fileExists(atPath: source.path, isDirectory: &isDir)
-
-            do {
-                if isDir.boolValue && fileManager.fileExists(atPath: dest.path) {
-                    // Both source and dest dirs exist — merge contents (move each child item)
-                    let children = try fileManager.contentsOfDirectory(atPath: source.path)
-                    var moved = 0
-                    for child in children {
-                        let childSrc = source.appendingPathComponent(child)
-                        let childDst = dest.appendingPathComponent(child)
-                        if fileManager.fileExists(atPath: childDst.path) { continue }
-                        try fileManager.moveItem(at: childSrc, to: childDst)
-                        moved += 1
-                    }
-                    // Remove source dir if now empty
-                    let remaining = try? fileManager.contentsOfDirectory(atPath: source.path)
-                    if remaining?.isEmpty == true {
-                        try? fileManager.removeItem(at: source)
-                    }
-                    log("RewindDatabase: Merged \(name) (\(moved) items moved)")
-                } else if fileManager.fileExists(atPath: dest.path) {
-                    // File already exists at dest — remove stale source copy
-                    try? fileManager.removeItem(at: source)
-                    log("RewindDatabase: Removed stale \(name) from source (already at dest)")
-                } else {
-                    try fileManager.moveItem(at: source, to: dest)
-                    log("RewindDatabase: Migrated \(name)")
-                }
-            } catch {
-                log("RewindDatabase: Failed to migrate \(name): \(error.localizedDescription)")
-            }
-        }
-
-        // Clean up source dir if it's now empty (don't leave empty anonymous/ dirs around)
-        if sourceDir != omiDir {
-            let remaining = try? fileManager.contentsOfDirectory(atPath: sourceDir.path)
-            if remaining?.isEmpty == true {
-                try? fileManager.removeItem(at: sourceDir)
-                log("RewindDatabase: Removed empty source dir \(sourceDir.lastPathComponent)")
-            }
-        }
-
-        log("RewindDatabase: Legacy migration complete")
-    }
-
     // MARK: - Corruption Detection & Recovery
 
     /// Check if database file is corrupted using quick_check
@@ -535,25 +396,25 @@ actor RewindDatabase {
     private(set) var recoveredRecordCount: Int = 0
 
     /// Handle corrupted database: attempt recovery, backup, and recreate
-    private func handleCorruptedDatabase(at dbPath: String, in omiDir: URL) async throws {
+    private func handleCorruptedDatabase(at dbPath: String, in vibeAiDir: URL) async throws {
         let fileManager = FileManager.default
 
         // Create backup directory
-        let backupDir = omiDir.appendingPathComponent("backups", isDirectory: true)
+        let backupDir = vibeAiDir.appendingPathComponent("backups", isDirectory: true)
         try fileManager.createDirectory(at: backupDir, withIntermediateDirectories: true)
 
         // Generate backup filename with timestamp
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd_HHmmss"
         let timestamp = formatter.string(from: Date())
-        let backupPath = backupDir.appendingPathComponent("omi_corrupted_\(timestamp).db")
+        let backupPath = backupDir.appendingPathComponent("vibeai_corrupted_\(timestamp).db")
 
         // Backup the corrupted database (for potential manual recovery)
         log("RewindDatabase: Backing up corrupted database to \(backupPath.path)")
         try fileManager.copyItem(atPath: dbPath, toPath: backupPath.path)
 
         // Attempt to recover data from corrupted database
-        let recoveredPath = omiDir.appendingPathComponent("omi_recovered.db").path
+        let recoveredPath = vibeAiDir.appendingPathComponent("vibeai_recovered.db").path
         let recoveredCount = await attemptDataRecovery(from: dbPath, to: recoveredPath)
         recoveredRecordCount = recoveredCount
 

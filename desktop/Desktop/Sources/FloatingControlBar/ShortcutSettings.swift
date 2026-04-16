@@ -7,7 +7,7 @@ class ShortcutSettings: ObservableObject {
     static let shared = ShortcutSettings()
 
     /// Notification posted when the Ask VibeAi shortcut changes so hotkeys can be re-registered.
-    nonisolated static let askOmiShortcutChanged = Notification.Name("ShortcutSettings.askOmiShortcutChanged")
+    nonisolated static let askVibeAiShortcutChanged = Notification.Name("ShortcutSettings.askVibeAiShortcutChanged")
 
     /// Available modifier keys for push-to-talk.
     enum PTTKey: String, CaseIterable {
@@ -25,7 +25,7 @@ class ShortcutSettings: ObservableObject {
     }
 
     /// Available shortcut presets for Ask VibeAi.
-    enum AskOmiKey: String, CaseIterable {
+    enum AskVibeAiKey: String, CaseIterable {
         case cmdEnter = "⌘ Enter"
         case cmdShiftEnter = "⌘⇧ Enter"
         case cmdJ = "⌘J"
@@ -81,10 +81,10 @@ class ShortcutSettings: ObservableObject {
         didSet { UserDefaults.standard.set(pttKey.rawValue, forKey: "shortcut_pttKey") }
     }
 
-    @Published var askOmiKey: AskOmiKey {
+    @Published var askVibeAiKey: AskVibeAiKey {
         didSet {
-            UserDefaults.standard.set(askOmiKey.rawValue, forKey: "shortcut_askOmiKey")
-            NotificationCenter.default.post(name: Self.askOmiShortcutChanged, object: nil)
+            UserDefaults.standard.set(askVibeAiKey.rawValue, forKey: "shortcut_askVibeAiKey")
+            NotificationCenter.default.post(name: Self.askVibeAiShortcutChanged, object: nil)
         }
     }
 
@@ -142,11 +142,11 @@ class ShortcutSettings: ObservableObject {
         } else {
             self.pttKey = .option
         }
-        if let saved = UserDefaults.standard.string(forKey: "shortcut_askOmiKey"),
-           let key = AskOmiKey(rawValue: saved) {
-            self.askOmiKey = key
+        if let saved = UserDefaults.standard.string(forKey: "shortcut_askVibeAiKey"),
+           let key = AskVibeAiKey(rawValue: saved) {
+            self.askVibeAiKey = key
         } else {
-            self.askOmiKey = .cmdEnter
+            self.askVibeAiKey = .cmdEnter
         }
         self.doubleTapForLock = UserDefaults.standard.object(forKey: "shortcut_doubleTapForLock") as? Bool ?? true
         self.solidBackground = UserDefaults.standard.object(forKey: "shortcut_solidBackground") as? Bool ?? false

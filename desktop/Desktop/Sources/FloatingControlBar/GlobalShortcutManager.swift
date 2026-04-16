@@ -7,14 +7,14 @@ import Cocoa
 class GlobalShortcutManager {
     static let shared = GlobalShortcutManager()
 
-    static let toggleFloatingBarNotification = Notification.Name("com.omi.desktop.toggleFloatingBar")
-    static let askAINotification = Notification.Name("com.omi.desktop.askAI")
+    static let toggleFloatingBarNotification = Notification.Name("com.vibeaiglobal.vibeai.toggleFloatingBar")
+    static let askAINotification = Notification.Name("com.vibeaiglobal.vibeai.askAI")
 
     private var hotKeyRefs: [HotKeyID: EventHotKeyRef] = [:]
 
     private enum HotKeyID: UInt32 {
         case toggleBar = 1
-        case askOmi = 2
+        case askVibeAi = 2
     }
 
     private var shortcutObserver: NSObjectProtocol?
@@ -34,11 +34,11 @@ class GlobalShortcutManager {
 
         // Re-register Ask VibeAi shortcut when user changes it in settings
         shortcutObserver = NotificationCenter.default.addObserver(
-            forName: ShortcutSettings.askOmiShortcutChanged,
+            forName: ShortcutSettings.askVibeAiShortcutChanged,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.registerAskOmi()
+            self?.registerAskVibeAi()
         }
     }
 
@@ -47,17 +47,17 @@ class GlobalShortcutManager {
         // Register Cmd+\ for toggle bar (keycode 42 = backslash)
         registerHotKey(keyCode: 42, modifiers: Int(cmdKey), id: .toggleBar)
         // Register Ask VibeAi shortcut from user settings
-        registerAskOmi()
+        registerAskVibeAi()
     }
 
-    private func registerAskOmi() {
+    private func registerAskVibeAi() {
         // Unregister previous Ask VibeAi hotkey if any
-        if let ref = hotKeyRefs.removeValue(forKey: .askOmi) {
+        if let ref = hotKeyRefs.removeValue(forKey: .askVibeAi) {
             UnregisterEventHotKey(ref)
         }
-        let askOmiKey = MainActor.assumeIsolated { ShortcutSettings.shared.askOmiKey }
-        registerHotKey(keyCode: Int(askOmiKey.keyCode), modifiers: askOmiKey.carbonModifiers, id: .askOmi)
-        NSLog("GlobalShortcutManager: Registered Ask VibeAi shortcut: \(askOmiKey.rawValue)")
+        let askVibeAiKey = MainActor.assumeIsolated { ShortcutSettings.shared.askVibeAiKey }
+        registerHotKey(keyCode: Int(askVibeAiKey.keyCode), modifiers: askVibeAiKey.carbonModifiers, id: .askVibeAi)
+        NSLog("GlobalShortcutManager: Registered Ask VibeAi shortcut: \(askVibeAiKey.rawValue)")
     }
 
     private func registerHotKey(keyCode: Int, modifiers: Int, id: HotKeyID) {
@@ -96,7 +96,7 @@ class GlobalShortcutManager {
         case .toggleBar:
             NSLog("GlobalShortcutManager: Cmd+\\ detected, toggling floating bar")
             NotificationCenter.default.post(name: GlobalShortcutManager.toggleFloatingBarNotification, object: nil)
-        case .askOmi:
+        case .askVibeAi:
             NSLog("GlobalShortcutManager: Ask VibeAi shortcut detected")
             DispatchQueue.main.async {
                 FloatingControlBarManager.shared.openAIInput()

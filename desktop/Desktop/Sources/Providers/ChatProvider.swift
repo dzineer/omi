@@ -341,13 +341,13 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     // NOTE: initialized lazily so it reads the persisted bridgeMode from UserDefaults,
     // not always defaulting to VibeAi mode on cold start.
     private lazy var acpBridge: ACPBridge = {
-        let isOmi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.omiAI.rawValue) != BridgeMode.userClaude.rawValue
-        return ACPBridge(passApiKey: isOmi)
+        let isVibeAi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.vibeAi.rawValue) != BridgeMode.userClaude.rawValue
+        return ACPBridge(passApiKey: isVibeAi)
     }()
     /// Claude Code engine bridge (used when useClaudeCodeEngine is enabled)
     private lazy var claudeCodeBridge: ClaudeCodeBridge = {
-        let isOmi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.omiAI.rawValue) != BridgeMode.userClaude.rawValue
-        return ClaudeCodeBridge(passApiKey: isOmi)
+        let isVibeAi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.vibeAi.rawValue) != BridgeMode.userClaude.rawValue
+        return ClaudeCodeBridge(passApiKey: isVibeAi)
     }()
     private var acpBridgeStarted = false
 
@@ -360,10 +360,10 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     }
 
     enum BridgeMode: String {
-        case omiAI = "agentSDK"
+        case vibeAi = "agentSDK"
         case userClaude = "claudeCode"
     }
-    @AppStorage("chatBridgeMode") var bridgeMode: String = BridgeMode.omiAI.rawValue
+    @AppStorage("chatBridgeMode") var bridgeMode: String = BridgeMode.vibeAi.rawValue
 
     /// Whether the ACP bridge requires authentication (shown as sheet in UI)
     @Published var isClaudeAuthRequired = false
@@ -377,9 +377,9 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     @Published var sessionTokensUsed: Int = 0
     /// Cumulative USD cost spent using the VibeAi account, persisted across sessions.
     /// Used to enforce the $50 threshold for auto-switching to the user's Claude account.
-    @AppStorage("omiAICumulativeCostUsd") var omiAICumulativeCostUsd: Double = 0.0
+    @AppStorage("vibeAiCumulativeCostUsd") var vibeAiCumulativeCostUsd: Double = 0.0
     /// Set to true when the $50 VibeAi account usage threshold is reached, triggering an alert.
-    @Published var showOmiThresholdAlert = false
+    @Published var showVibeAiThresholdAlert = false
 
     private let messagesPageSize = 50
     private let maxMessagesInMemory = 200
@@ -622,7 +622,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         // Compare against the actual running bridge state, not bridgeMode (@AppStorage updates
         // immediately when the Picker changes, so bridgeMode already equals `mode` by the time
         // this function is called — the old string comparison always exits early).
-        guard (mode == .omiAI) != (await activeBridge.passApiKey) else { return }
+        guard (mode == .vibeAi) != (await activeBridge.passApiKey) else { return }
         let oldMode = bridgeMode
         log("ChatProvider: Switching bridge mode from \(bridgeMode) to \(mode.rawValue)")
 
@@ -632,8 +632,8 @@ A screenshot may be attached — use it silently only if relevant. Never mention
 
         // Switch mode and recreate bridges with appropriate passApiKey
         bridgeMode = mode.rawValue
-        acpBridge = ACPBridge(passApiKey: mode == .omiAI)
-        claudeCodeBridge = ClaudeCodeBridge(passApiKey: mode == .omiAI)
+        acpBridge = ACPBridge(passApiKey: mode == .vibeAi)
+        claudeCodeBridge = ClaudeCodeBridge(passApiKey: mode == .vibeAi)
         AnalyticsManager.shared.chatBridgeModeChanged(from: oldMode, to: mode.rawValue)
 
         // Check Claude connection status when switching to user's Claude account
@@ -730,7 +730,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         isClaudeConnected = false
 
         // 5. Switch back to VibeAi mode and recreate bridge with API key
-        bridgeMode = BridgeMode.omiAI.rawValue
+        bridgeMode = BridgeMode.vibeAi.rawValue
         acpBridge = ACPBridge(passApiKey: true)
         claudeCodeBridge = ClaudeCodeBridge(passApiKey: true)
     }
@@ -1172,7 +1172,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
 
     /// Formats raw DDL into a compact, LLM-friendly schema block
     private func formatSchema(tables: [(name: String, sql: String)]) -> String {
-        var lines: [String] = ["**Database schema (omi.db):**", ""]
+        var lines: [String] = ["**Database schema (vibeai.db):**", ""]
 
         for (name, sql) in tables {
             // Skip internal/FTS tables
@@ -1404,16 +1404,16 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     func initialize() async {
         // Seed cumulative VibeAi cost from backend now that auth is ready (background, no latency)
         Task.detached(priority: .background) { [weak self] in
-            guard let serverCost = await APIClient.shared.fetchTotalOmiAICost() else { return }
+            guard let serverCost = await APIClient.shared.fetchTotalVibeAiCost() else { return }
             guard let self else { return }
             await MainActor.run {
                 // Always trust the server value — it's the authoritative total
-                self.omiAICumulativeCostUsd = serverCost
+                self.vibeAiCumulativeCostUsd = serverCost
                 log("ChatProvider: Seeded VibeAi cumulative cost from backend: $\(String(format: "%.4f", serverCost))")
                 // Auto-switch if already over threshold on startup
-                if self.bridgeMode == BridgeMode.omiAI.rawValue && serverCost >= 50.0 {
+                if self.bridgeMode == BridgeMode.vibeAi.rawValue && serverCost >= 50.0 {
                     log("ChatProvider: VibeAi cost already at $\(String(format: "%.2f", serverCost)) on startup — switching to user Claude account")
-                    self.showOmiThresholdAlert = true
+                    self.showVibeAiThresholdAlert = true
                     Task { await self.switchBridgeMode(to: .userClaude) }
                 }
             }
@@ -1850,8 +1850,8 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         }
 
         // Guard: Block query if VibeAi account $50 usage threshold already reached
-        if bridgeMode == BridgeMode.omiAI.rawValue && omiAICumulativeCostUsd >= 50.0 {
-            showOmiThresholdAlert = true
+        if bridgeMode == BridgeMode.vibeAi.rawValue && vibeAiCumulativeCostUsd >= 50.0 {
+            showVibeAiThresholdAlert = true
             Task { await self.switchBridgeMode(to: .userClaude) }
             return
         }
@@ -2115,9 +2115,9 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                 messageLength: responseLength
             )
 
-            if bridgeMode == BridgeMode.omiAI.rawValue {
+            if bridgeMode == BridgeMode.vibeAi.rawValue {
                 sessionTokensUsed += queryResult.inputTokens + queryResult.outputTokens
-                omiAICumulativeCostUsd += queryResult.costUsd
+                vibeAiCumulativeCostUsd += queryResult.costUsd
                 let r = queryResult
                 Task.detached(priority: .background) {
                     await APIClient.shared.recordLlmUsage(
@@ -2130,8 +2130,8 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                     )
                 }
                 // Auto-switch to the user's Claude account when the $50 VibeAi usage threshold is reached
-                if omiAICumulativeCostUsd >= 50.0 {
-                    showOmiThresholdAlert = true
+                if vibeAiCumulativeCostUsd >= 50.0 {
+                    showVibeAiThresholdAlert = true
                     Task { await self.switchBridgeMode(to: .userClaude) }
                 }
             }

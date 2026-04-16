@@ -82,8 +82,8 @@ struct SidebarView: View {
     @ObservedObject private var updaterViewModel = UpdaterViewModel.shared
     @ObservedObject private var crispManager = CrispManager.shared
 
-    // State for Get Omi Widget (shown when no device is paired, dismissible)
-    @AppStorage("showGetOmiWidget") private var showGetOmiWidget = true
+    // State for Get VibeAi Widget (shown when no device is paired, dismissible)
+    @AppStorage("showGetVibeAiWidget") private var showGetOmiWidget = true
 
     // Tier gating (0 = show all, 1-6 = sequential tiers)
     @AppStorage("currentTierLevel") private var currentTierLevel = 0
@@ -544,7 +544,7 @@ struct SidebarView: View {
 //        .help("Upgrade to Pro")
 //    }
 
-    // MARK: - Get Omi Widget (Sales link to omi.me)
+    // MARK: - Get Omi Widget (Sales link to omi.me — Omi hardware brand, not VibeAi branding)
     private var getOmiWidget: some View {
         Button(action: {
             if let url = URL(string: "https://www.omi.me") {
@@ -553,7 +553,7 @@ struct SidebarView: View {
         }) {
             HStack(spacing: 12) {
                 // Omi device image
-                if let deviceImage = OmiDeviceImage.shared {
+                if let deviceImage = VibeAiDeviceImage.shared {
                     Image(nsImage: deviceImage)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -669,7 +669,7 @@ struct SidebarView: View {
                 // Device icon with status indicator
                 ZStack(alignment: .bottomTrailing) {
                     // Device image or icon
-                    if let deviceImage = OmiDeviceImage.shared {
+                    if let deviceImage = VibeAiDeviceImage.shared {
                         Image(nsImage: deviceImage)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
@@ -1822,7 +1822,7 @@ private struct AudioLevelNavItem: View {
 
 /// Cache the Omi device WebP image so it's decoded once, not on every SwiftUI body evaluation.
 /// The original 1383x1383 WebP was being re-decoded by CoreAnimation every render frame.
-enum OmiDeviceImage {
+enum VibeAiDeviceImage {
     static let shared: NSImage? = {
         guard let url = Bundle.resourceBundle.url(forResource: "omi-with-rope-no-padding", withExtension: "webp") else {
             return nil

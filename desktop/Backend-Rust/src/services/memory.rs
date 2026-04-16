@@ -18,7 +18,7 @@ impl MemoryService {
     pub fn new() -> Self {
         let dir = dirs::home_dir()
             .unwrap_or_else(|| PathBuf::from("."))
-            .join(".omi")
+            .join(".vibeai")
             .join("memory");
         std::fs::create_dir_all(&dir).ok();
 

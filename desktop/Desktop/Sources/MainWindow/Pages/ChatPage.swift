@@ -112,7 +112,7 @@ struct ChatPage: View {
     @State private var isLoadingCitation = false
     @State private var copied = false
 
-    var selectedApp: OmiApp? {
+    var selectedApp: VibeAiApp? {
         guard let appId = chatProvider.selectedAppId else { return nil }
         return appProvider.chatApps.first { $0.id == appId }
     }
@@ -189,20 +189,20 @@ struct ChatPage: View {
                     chatProvider.isClaudeAuthRequired = false
                     // Switch back to Mode A if auth cancelled
                     Task {
-                        await chatProvider.switchBridgeMode(to: ChatProvider.BridgeMode.omiAI)
+                        await chatProvider.switchBridgeMode(to: ChatProvider.BridgeMode.vibeAi)
                     }
                 }
             )
         }
-        .alert("Free Usage Limit Reached", isPresented: $chatProvider.showOmiThresholdAlert) {
+        .alert("Free Usage Limit Reached", isPresented: $chatProvider.showVibeAiThresholdAlert) {
             Button("Connect Claude Account") {
-                chatProvider.showOmiThresholdAlert = false
+                chatProvider.showVibeAiThresholdAlert = false
                 if !chatProvider.isClaudeConnected {
                     chatProvider.isClaudeAuthRequired = true
                 }
             }
             Button("Later", role: .cancel) {
-                chatProvider.showOmiThresholdAlert = false
+                chatProvider.showVibeAiThresholdAlert = false
             }
         } message: {
             Text("Please connect your Claude account to continue chatting.")
@@ -610,7 +610,7 @@ struct ChatPage: View {
 
 struct ChatBubble: View {
     let message: ChatMessage
-    let app: OmiApp?
+    let app: VibeAiApp?
     let onRate: (Int?) -> Void
     var onCitationTap: ((Citation) -> Void)? = nil
     var isDuplicate: Bool = false
@@ -622,7 +622,7 @@ struct ChatBubble: View {
     /// `[ContentBlockGroup]` on every SwiftUI layout pass.
     @State private var cachedGroupedBlocks: [ContentBlockGroup]
 
-    init(message: ChatMessage, app: OmiApp?, onRate: @escaping (Int?) -> Void,
+    init(message: ChatMessage, app: VibeAiApp?, onRate: @escaping (Int?) -> Void,
          onCitationTap: ((Citation) -> Void)? = nil, isDuplicate: Bool = false) {
         self.message = message
         self.app = app
@@ -1288,7 +1288,7 @@ struct TypingIndicator: View {
 // MARK: - App Picker Popover
 
 struct AppPickerPopover: View {
-    let apps: [OmiApp]
+    let apps: [VibeAiApp]
     @Binding var selectedAppId: String?
     let onSelect: () -> Void
 
@@ -1377,7 +1377,7 @@ struct DefaultOmiRow: View {
 }
 
 struct AppPickerRow: View {
-    let app: OmiApp
+    let app: VibeAiApp
     let isSelected: Bool
     let onSelect: () -> Void
 

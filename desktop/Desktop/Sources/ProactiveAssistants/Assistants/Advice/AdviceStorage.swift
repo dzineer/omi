@@ -1,5 +1,4 @@
 import Foundation
-import FirebaseCore
 
 /// Stored advice item with additional metadata
 struct StoredAdvice: Codable, Identifiable {
@@ -72,7 +71,7 @@ class AdviceStorage: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var lastSyncError: String?
 
-    private let localStorageKey = "omi.advice.history"
+    private let localStorageKey = "vibeai.advice.history"
     private let maxLocalAdvice = 100
     private var isSyncing = false
 
@@ -187,9 +186,9 @@ class AdviceStorage: ObservableObject {
     private func syncFromBackend() async {
         guard !isSyncing else { return }
 
-        // Don't sync if Firebase isn't configured yet (app still initializing)
-        guard FirebaseApp.app() != nil else {
-            log("Advice: Skipping sync - Firebase not configured yet")
+        // Don't sync if auth isn't configured yet (app still initializing)
+        guard AuthService.shared.isConfigured else {
+            log("Advice: Skipping sync - auth not configured yet")
             return
         }
 

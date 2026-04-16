@@ -34,8 +34,10 @@ When context compacts, restore state by reading these files in order:
 
 ### Top Priorities for Next Session
 1. **KNOWLEDGE003** — Force-directed graph (`../tasks/knowledge-graph-v2.gibber`). Current static circles are wrong. Need physics, drag/zoom, double-click drill-down. **Remove flat record list** (user hates it).
-2. Screen recording TCC — ad-hoc signing breaks permission recognition
-3. Kokoro TTS not audible from app (server works via curl, app plays 0 bytes)
+2. Kokoro TTS not audible from app (server works via curl, app plays 0 bytes)
+
+### Signing — ad-hoc required
+App is ad-hoc signed. `run.sh` tries Developer ID first but that needs notarization (Gatekeeper rejects). Apple Development needs a matching provisioning profile (team `432CJTTJ46` / bundle `com.vibeaiglobal.vibeai-dev` — doesn't exist). **After `run.sh`, run `codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"` to override with ad-hoc** or app fails to launch (RBS Code=5 / errno 153). Tradeoff: Screen Recording permission re-prompts each build.
 
 ### User Preferences (CRITICAL)
 - **Zero cloud dependencies** — local-first always
@@ -48,7 +50,7 @@ When context compacts, restore state by reading these files in order:
 ### Run Commands
 ```bash
 bash run.sh   # build + install (tunnel error is harmless)
-codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"
+codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"  # required ad-hoc override (see Signing section)
 sed -i '' 's|OMI_API_URL=.*|OMI_API_URL=http://localhost:8080|' "/Applications/Vibe AI Dev.app/Contents/Resources/.env"
 open "/Applications/Vibe AI Dev.app"
 

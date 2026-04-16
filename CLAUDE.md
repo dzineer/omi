@@ -44,15 +44,26 @@ This is a fork of Omi renamed to **VibeAi** with major integrations:
 1. **KNOWLEDGE003** — Force-directed knowledge graph (spec: `tasks/knowledge-graph-v2.gibber`)
    - Current static circle layout is wrong
    - User wants: physics simulation, drag/zoom/pan, double-click drill-down, NO flat record list
-2. **Screen recording TCC** — ad-hoc signing breaks permission recognition
+2. **Screen recording TCC re-prompt** — caused by ad-hoc signing (see Signing section)
 3. **Kokoro TTS audible output** — server works via curl, app doesn't play sound
+
+### Signing — context
+
+The app is **ad-hoc signed** (`codesign --force --deep --sign -`). This is required because:
+- The embedded provisioning profile (`Desktop/embedded-dev.provisionprofile`) is for team `S6DP5HF77G` / bundle ID `com.omi.desktop-dev` (upstream Omi team), not our fork's team `432CJTTJ46` / bundle ID `com.vibeaiglobal.vibeai-dev`.
+- Signing with Apple Development cert without a matching provisioning profile fails launchd with `RBSRequestErrorDomain Code=5 / errno 153` (hardened runtime entitlement mismatch).
+- Signing with Developer ID cert without notarization gets rejected by Gatekeeper (`source=Unnotarized Developer ID`).
+
+Consequence: every rebuild gets a new CDHash, so TCC treats it as a different app and re-prompts for Screen Recording. Tradeoff accepted for now.
+
+**To properly fix** (future work): create a Mac Development provisioning profile for team `432CJTTJ46` and bundle ID `com.vibeaiglobal.vibeai-dev` in Apple Developer portal, save as `Desktop/embedded-dev.provisionprofile`, then `run.sh` can sign with Apple Development cert and TCC will persist.
 
 ### Running the app
 
 ```bash
 cd desktop && bash run.sh
 # run.sh fails at tunnel step — ignore, app still builds
-codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"
+codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"  # required: run.sh tries Developer ID which gets rejected by Gatekeeper
 sed -i '' 's|OMI_API_URL=.*|OMI_API_URL=http://localhost:8080|' "/Applications/Vibe AI Dev.app/Contents/Resources/.env"
 open "/Applications/Vibe AI Dev.app"
 

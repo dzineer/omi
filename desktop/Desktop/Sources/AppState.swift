@@ -90,6 +90,7 @@ class AppState: ObservableObject {
     @Published var isScreenCaptureKitBroken = false  // TCC says yes but ScreenCaptureKit says no
     @Published var isScreenRecordingStale = false  // TCC says yes but capture fails (developer signing changed)
     var screenRecordingGrantAttempts = 0  // Track how many times user clicked Grant without success
+    private var autoRequestedScreenRecordingThisLaunch = false  // Avoid repeatedly invoking the macOS prompt
     @Published var hasAutomationPermission = false
     @Published var automationPermissionError: OSStatus = 0  // Non-zero when check fails unexpectedly (e.g. -600 procNotFound)
     private var isCheckingAutomationPermission = false  // Prevent concurrent checks (retry path has a 1s sleep)
@@ -764,6 +765,15 @@ class AppState: ObservableObject {
         if !tccGranted {
             hasScreenRecordingPermission = false
             isScreenCaptureKitBroken = false
+            // Auto-trigger the permission prompt once per launch when the app isn't in
+            // the Screen Recording list at all (e.g. after a signature change or TCC reset).
+            // Calling CGRequestScreenCaptureAccess() from within our own process is what
+            // makes macOS add this bundle ID to System Settings → Screen & System Audio Recording.
+            if !autoRequestedScreenRecordingThisLaunch {
+                autoRequestedScreenRecordingThisLaunch = true
+                log("Screen capture: permission not granted — auto-requesting so macOS registers the app")
+                ScreenCaptureService.requestAllScreenCapturePermissions()
+            }
             // If user already tried Grant once and permission is still not granted,
             // the TCC entry is likely corrupted (e.g. after developer account change
             // + tccutil reset). Show stale UI with toggle off/on instructions.

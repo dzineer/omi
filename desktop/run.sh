@@ -30,8 +30,8 @@ substep() {
 
 # App configuration
 BINARY_NAME="Vibe AI"  # Package.swift target — binary paths, pkill, CFBundleExecutable
-APP_NAME="Vibe AI Dev"
-BUNDLE_ID="com.vibeaiglobal.vibeai-dev"
+APP_NAME="VibeAi"
+BUNDLE_ID="com.vibeaiglobal.vibeai-desktop"
 BUILD_DIR="build"
 APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 APP_PATH="/Applications/$APP_NAME.app"
@@ -217,16 +217,14 @@ cp -f Desktop/Info.plist "$APP_BUNDLE/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$APP_BUNDLE/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleName $APP_NAME" "$APP_BUNDLE/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName VibeAi" "$APP_BUNDLE/Contents/Info.plist"
-/usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:0:CFBundleURLSchemes:0 vibeai-dev" "$APP_BUNDLE/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Set :CFBundleURLTypes:0:CFBundleURLSchemes:0 vibeai-desktop" "$APP_BUNDLE/Contents/Info.plist"
 
 auth_debug "AFTER plist edits: auth_isSignedIn=$(defaults read "$BUNDLE_ID" auth_isSignedIn 2>&1 || true)"
 
-substep "Copying GoogleService-Info.plist (dev version for com.vibeaiglobal.vibeai-dev)"
-if [ -f "Desktop/Sources/GoogleService-Info-Dev.plist" ]; then
-    cp -f Desktop/Sources/GoogleService-Info-Dev.plist "$APP_BUNDLE/Contents/Resources/GoogleService-Info.plist"
-else
-    cp -f Desktop/Sources/GoogleService-Info.plist "$APP_BUNDLE/Contents/Resources/"
-fi
+# Firebase disabled for VibeAi — not copying GoogleService-Info.plist into the bundle.
+# Without this plist, AuthProviderFactory.create() falls through to LocalAuthProvider
+# and the Firebase SDK is never initialized. Firebase code remains in the repo so it
+# can be re-enabled later by dropping a plist here and rebuilding.
 
 # Copy resource bundle (contains app assets like permissions.gif, herologo.png, etc.)
 RESOURCE_BUNDLE="Desktop/.build/arm64-apple-macosx/debug/Vibe AI_Vibe AI.bundle"
@@ -279,11 +277,14 @@ step "Signing app with hardened runtime..."
 # Ad-hoc signing (--sign -) generates a new CDHash each build, causing macOS to
 # reset Screen Recording, Accessibility, and Notification permissions every time.
 if [ -z "$SIGN_IDENTITY" ]; then
-    # For dev builds: prefer Apple Development (matches Mac Development provisioning profile,
-    # required for native Sign In with Apple). Fall back to Developer ID if unavailable.
-    SIGN_IDENTITY=$(security find-identity -v -p codesigning | grep "Apple Development" | head -1 | sed 's/.*"\(.*\)"/\1/')
+    # Prefer Developer ID Application (team 432CJTTJ46) to match the embedded provisioning
+    # profile (Desktop/embedded-dev.provisionprofile). This gives a stable CDHash so macOS
+    # TCC permissions (Screen Recording, Mic, Accessibility) persist across rebuilds.
+    # Use SHA-1 hash (first column) instead of name — names can be ambiguous when multiple
+    # certs share the same common name, which causes codesign to fail with "ambiguous".
+    SIGN_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | grep "432CJTTJ46" | head -1 | awk '{print $2}')
     if [ -z "$SIGN_IDENTITY" ]; then
-        SIGN_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | sed 's/.*"\(.*\)"/\1/')
+        SIGN_IDENTITY=$(security find-identity -v -p codesigning | grep "Apple Development" | head -1 | awk '{print $2}')
     fi
 fi
 

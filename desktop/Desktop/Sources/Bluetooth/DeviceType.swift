@@ -1,8 +1,8 @@
 import Foundation
 
-// MARK: - Omi Feature Flags
+// MARK: - Omi Device Feature Flags
 
-/// Feature flags for Omi device capabilities
+/// Feature flags for Omi hardware device capabilities
 /// Must match the firmware definitions in features.h
 /// Ported from: omi/app/lib/services/devices.dart
 struct OmiFeatures: OptionSet {
@@ -65,7 +65,7 @@ enum DeviceType: String, CaseIterable, Codable {
     /// Human-readable display name
     var displayName: String {
         switch self {
-        case .omi: return "Omi"
+        case .omi: return "VibeAi"
         case .openglass: return "OpenGlass"
         case .frame: return "Frame"
         case .appleWatch: return "Apple Watch"
@@ -139,7 +139,7 @@ enum DeviceType: String, CaseIterable, Codable {
         }
 
         return """
-        Your device's current firmware works great with Omi.
+        Your device's current firmware works great with VibeAi.
 
         We recommend keeping your current firmware and not updating through the \(appName) app, as newer versions may affect compatibility.
         """

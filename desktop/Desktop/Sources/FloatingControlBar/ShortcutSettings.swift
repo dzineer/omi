@@ -6,7 +6,7 @@ import Cocoa
 class ShortcutSettings: ObservableObject {
     static let shared = ShortcutSettings()
 
-    /// Notification posted when the Ask Omi shortcut changes so hotkeys can be re-registered.
+    /// Notification posted when the Ask VibeAi shortcut changes so hotkeys can be re-registered.
     nonisolated static let askOmiShortcutChanged = Notification.Name("ShortcutSettings.askOmiShortcutChanged")
 
     /// Available modifier keys for push-to-talk.
@@ -24,7 +24,7 @@ class ShortcutSettings: ObservableObject {
         }
     }
 
-    /// Available shortcut presets for Ask Omi.
+    /// Available shortcut presets for Ask VibeAi.
     enum AskOmiKey: String, CaseIterable {
         case cmdEnter = "⌘ Enter"
         case cmdShiftEnter = "⌘⇧ Enter"
@@ -102,12 +102,12 @@ class ShortcutSettings: ObservableObject {
         didSet { UserDefaults.standard.set(pttSoundsEnabled, forKey: "shortcut_pttSoundsEnabled") }
     }
 
-    /// Selected AI model for Ask Omi.
+    /// Selected AI model for Ask VibeAi.
     @Published var selectedModel: String {
         didSet { UserDefaults.standard.set(selectedModel, forKey: "shortcut_selectedModel") }
     }
 
-    /// Available models for Ask Omi.
+    /// Available models for Ask VibeAi.
     static let availableModels: [(id: String, label: String)] = [
         ("claude-sonnet-4-6", "Sonnet"),
         ("claude-opus-4-6", "Opus"),

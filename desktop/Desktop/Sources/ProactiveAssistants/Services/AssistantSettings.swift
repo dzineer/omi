@@ -204,7 +204,7 @@ class AssistantSettings {
     /// Returns vocabulary with "Omi" always included (for DeepGram)
     var effectiveVocabulary: [String] {
         var vocab = Set(transcriptionVocabulary)
-        vocab.insert("Omi")
+        vocab.insert("VibeAi")
         return Array(vocab)
     }
 

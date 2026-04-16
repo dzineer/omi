@@ -322,7 +322,7 @@ struct ChatPage: View {
                         }
                     } else {
                         // Default OMI assistant
-                        Text("Vibe AI")
+                        Text("VibeAi")
                             .scaledFont(size: 14, weight: .medium)
                             .foregroundColor(VibeAIColors.textPrimary)
                     }
@@ -491,7 +491,7 @@ struct ChatPage: View {
                         .frame(width: 48, height: 48)
                 }
 
-                Text("Chat with Vibe AI")
+                Text("Chat with VibeAi")
                     .scaledFont(size: 18, weight: .semibold)
                     .foregroundColor(VibeAIColors.textPrimary)
 
@@ -563,7 +563,7 @@ struct ChatPage: View {
     /// Copy the entire conversation to clipboard
     private func copyConversation() {
         let text: String = chatProvider.messages.map { message in
-            let sender = message.sender == .user ? "You" : (selectedApp?.name ?? "Vibe AI")
+            let sender = message.sender == .user ? "You" : (selectedApp?.name ?? "VibeAi")
             return "\(sender): \(message.text)"
         }.joined(separator: "\n\n")
 
@@ -1355,7 +1355,7 @@ struct DefaultOmiRow: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
 
-                Text("Vibe AI")
+                Text("VibeAi")
                     .scaledFont(size: 13, weight: .medium)
                     .foregroundColor(VibeAIColors.textPrimary)
 

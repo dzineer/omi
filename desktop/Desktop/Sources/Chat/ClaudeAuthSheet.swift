@@ -14,16 +14,16 @@ struct ClaudeAuthSheet: View {
             HStack {
                 Text("Connect Your Claude Account")
                     .scaledFont(size: 18, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
 
                 Spacer()
 
                 Button(action: onCancel) {
                     Image(systemName: "xmark")
                         .scaledFont(size: 14, weight: .medium)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                         .frame(width: 28, height: 28)
-                        .background(OmiColors.backgroundTertiary.opacity(0.5))
+                        .background(VibeAIColors.backgroundTertiary.opacity(0.5))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -33,26 +33,26 @@ struct ClaudeAuthSheet: View {
             .padding(.bottom, 16)
 
             Divider()
-                .foregroundColor(OmiColors.border)
+                .foregroundColor(VibeAIColors.border)
 
             // Content
             VStack(spacing: 20) {
                 // Icon
                 Image(systemName: "person.badge.key")
                     .scaledFont(size: 40)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
                     .padding(.top, 8)
 
                 // Description
                 VStack(spacing: 8) {
                     Text("Use your own Claude Pro or Max subscription")
                         .scaledFont(size: 15, weight: .medium)
-                        .foregroundColor(OmiColors.textPrimary)
+                        .foregroundColor(VibeAIColors.textPrimary)
                         .multilineTextAlignment(.center)
 
-                    Text("Your browser will open to sign in with Claude. After authenticating, return to Omi.")
+                    Text("Your browser will open to sign in with Claude. After authenticating, return to VibeAi.")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -65,7 +65,7 @@ struct ClaudeAuthSheet: View {
 
                         Text("Complete sign-in in your browser...")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                     .padding(.top, 4)
                 }
@@ -91,8 +91,8 @@ struct ClaudeAuthSheet: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(isConnecting ? OmiColors.backgroundTertiary : Color.accentColor)
-                    .foregroundColor(isConnecting ? OmiColors.textSecondary : .white)
+                    .background(isConnecting ? VibeAIColors.backgroundTertiary : Color.accentColor)
+                    .foregroundColor(isConnecting ? VibeAIColors.textSecondary : .white)
                     .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
@@ -101,7 +101,7 @@ struct ClaudeAuthSheet: View {
                 Button(action: onCancel) {
                     Text("Cancel")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
                 .buttonStyle(.plain)
             }
@@ -109,6 +109,6 @@ struct ClaudeAuthSheet: View {
             .padding(.bottom, 20)
         }
         .frame(width: 400, height: 380)
-        .background(OmiColors.backgroundPrimary)
+        .background(VibeAIColors.backgroundPrimary)
     }
 }

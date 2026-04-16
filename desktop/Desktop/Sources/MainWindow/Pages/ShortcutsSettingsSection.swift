@@ -28,10 +28,10 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("AI Model")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
-                Text("Choose the AI model for Ask Omi conversations.")
+                    .foregroundColor(VibeAIColors.textPrimary)
+                Text("Choose the AI model for Ask VibeAi conversations.")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
 
             HStack(spacing: 12) {
@@ -44,7 +44,7 @@ struct ShortcutsSettingsSection: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.model", highlightedSettingId: $highlightedSettingId))
     }
@@ -56,18 +56,18 @@ struct ShortcutsSettingsSection: View {
         } label: {
             Text(model.label)
                 .scaledFont(size: 13, weight: .medium)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
                         .fill(isSelected
-                              ? OmiColors.purplePrimary.opacity(0.3)
-                              : OmiColors.backgroundTertiary.opacity(0.5))
+                              ? VibeAIColors.purplePrimary.opacity(0.3)
+                              : VibeAIColors.backgroundTertiary.opacity(0.5))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(isSelected ? OmiColors.purplePrimary : Color.clear, lineWidth: 1.5)
+                        .stroke(isSelected ? VibeAIColors.purplePrimary : Color.clear, lineWidth: 1.5)
                 )
         }
         .buttonStyle(.plain)
@@ -78,22 +78,22 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Background Style")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                 Text(settings.solidBackground
                      ? "Solid dark background"
                      : "Semi-transparent with blur")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
             Spacer()
             Toggle("", isOn: $settings.solidBackground)
                 .toggleStyle(.switch)
-                .tint(OmiColors.purplePrimary)
+                .tint(VibeAIColors.purplePrimary)
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.background", highlightedSettingId: $highlightedSettingId))
     }
@@ -103,20 +103,20 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Draggable Floating Bar")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                 Text("Allow repositioning the floating bar by dragging it.")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
             Spacer()
             Toggle("", isOn: $settings.draggableBarEnabled)
                 .toggleStyle(.switch)
-                .tint(OmiColors.purplePrimary)
+                .tint(VibeAIColors.purplePrimary)
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.draggable", highlightedSettingId: $highlightedSettingId))
     }
@@ -124,12 +124,12 @@ struct ShortcutsSettingsSection: View {
     private var askOmiKeyCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Ask Omi Shortcut")
+                Text("Ask VibeAi Shortcut")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
-                Text("Global shortcut to open Ask Omi from anywhere.")
+                    .foregroundColor(VibeAIColors.textPrimary)
+                Text("Global shortcut to open Ask VibeAi from anywhere.")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
 
             HStack(spacing: 12) {
@@ -142,7 +142,7 @@ struct ShortcutsSettingsSection: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.shortcut", highlightedSettingId: $highlightedSettingId))
     }
@@ -154,18 +154,18 @@ struct ShortcutsSettingsSection: View {
         } label: {
             Text(key.rawValue)
                 .scaledFont(size: 13, weight: .medium)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
                         .fill(isSelected
-                              ? OmiColors.purplePrimary.opacity(0.3)
-                              : OmiColors.backgroundTertiary.opacity(0.5))
+                              ? VibeAIColors.purplePrimary.opacity(0.3)
+                              : VibeAIColors.backgroundTertiary.opacity(0.5))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(isSelected ? OmiColors.purplePrimary : Color.clear, lineWidth: 1.5)
+                        .stroke(isSelected ? VibeAIColors.purplePrimary : Color.clear, lineWidth: 1.5)
                 )
         }
         .buttonStyle(.plain)
@@ -176,10 +176,10 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Push to Talk")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                 Text("Hold the key to speak, release to send your question to AI.")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
 
             HStack(spacing: 12) {
@@ -192,7 +192,7 @@ struct ShortcutsSettingsSection: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.ptt", highlightedSettingId: $highlightedSettingId))
     }
@@ -208,18 +208,18 @@ struct ShortcutsSettingsSection: View {
                 Text(key.rawValue)
                     .scaledFont(size: 13, weight: .medium)
             }
-            .foregroundColor(OmiColors.textPrimary)
+            .foregroundColor(VibeAIColors.textPrimary)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(isSelected
-                          ? OmiColors.purplePrimary.opacity(0.3)
-                          : OmiColors.backgroundTertiary.opacity(0.5))
+                          ? VibeAIColors.purplePrimary.opacity(0.3)
+                          : VibeAIColors.backgroundTertiary.opacity(0.5))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? OmiColors.purplePrimary : Color.clear, lineWidth: 1.5)
+                    .stroke(isSelected ? VibeAIColors.purplePrimary : Color.clear, lineWidth: 1.5)
             )
         }
         .buttonStyle(.plain)
@@ -230,10 +230,10 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Transcription Mode")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                 Text(settings.pttTranscriptionMode.description)
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
 
             HStack(spacing: 12) {
@@ -246,7 +246,7 @@ struct ShortcutsSettingsSection: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.transcriptionmode", highlightedSettingId: $highlightedSettingId))
     }
@@ -258,18 +258,18 @@ struct ShortcutsSettingsSection: View {
         } label: {
             Text(mode.rawValue)
                 .scaledFont(size: 13, weight: .medium)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
                         .fill(isSelected
-                              ? OmiColors.purplePrimary.opacity(0.3)
-                              : OmiColors.backgroundTertiary.opacity(0.5))
+                              ? VibeAIColors.purplePrimary.opacity(0.3)
+                              : VibeAIColors.backgroundTertiary.opacity(0.5))
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(isSelected ? OmiColors.purplePrimary : Color.clear, lineWidth: 1.5)
+                        .stroke(isSelected ? VibeAIColors.purplePrimary : Color.clear, lineWidth: 1.5)
                 )
         }
         .buttonStyle(.plain)
@@ -280,20 +280,20 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Double-tap for Locked Mode")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                 Text("Double-tap the push-to-talk key to keep listening hands-free. Tap again to send.")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
             Spacer()
             Toggle("", isOn: $settings.doubleTapForLock)
                 .toggleStyle(.switch)
-                .tint(OmiColors.purplePrimary)
+                .tint(VibeAIColors.purplePrimary)
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.doubletap", highlightedSettingId: $highlightedSettingId))
     }
@@ -303,20 +303,20 @@ struct ShortcutsSettingsSection: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Push-to-Talk Sounds")
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
                 Text("Play audio feedback when starting and ending voice input.")
                     .scaledFont(size: 13)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
             }
             Spacer()
             Toggle("", isOn: $settings.pttSoundsEnabled)
                 .toggleStyle(.switch)
-                .tint(OmiColors.purplePrimary)
+                .tint(VibeAIColors.purplePrimary)
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
         .modifier(SettingHighlightModifier(settingId: "advanced.askomi.pttsounds", highlightedSettingId: $highlightedSettingId))
     }
@@ -325,9 +325,9 @@ struct ShortcutsSettingsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Keyboard Shortcuts")
                 .scaledFont(size: 16, weight: .semibold)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
 
-            shortcutRow(label: "Ask omi", keys: settings.askOmiKey.rawValue)
+            shortcutRow(label: "Ask VibeAi", keys: settings.askOmiKey.rawValue)
             shortcutRow(label: "Toggle floating bar", keys: "\u{2318}\\")
             shortcutRow(label: "Push to talk", keys: settings.pttKey.symbol + " hold")
             if settings.doubleTapForLock {
@@ -337,7 +337,7 @@ struct ShortcutsSettingsSection: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
         )
     }
 
@@ -345,14 +345,14 @@ struct ShortcutsSettingsSection: View {
         HStack {
             Text(label)
                 .scaledFont(size: 14)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
             Spacer()
             Text(keys)
                 .scaledMonospacedFont(size: 14, weight: .medium)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(OmiColors.backgroundTertiary.opacity(0.8))
+                .background(VibeAIColors.backgroundTertiary.opacity(0.8))
                 .cornerRadius(6)
         }
     }

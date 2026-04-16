@@ -2,7 +2,7 @@ import Foundation
 import GRDB
 
 /// Executes tool calls from Gemini and returns results
-/// Tools: execute_sql (read/write SQL on omi.db), semantic_search (vector similarity)
+/// Tools: execute_sql (read/write SQL on local database), semantic_search (vector similarity)
 @MainActor
 class ChatToolExecutor {
 
@@ -481,7 +481,7 @@ class ChatToolExecutor {
             if appState.hasScreenRecordingPermission {
                 return "granted"
             } else {
-                return "pending - user needs to toggle Screen Recording for Omi in System Settings, then quit and reopen the app"
+                return "pending - user needs to toggle Screen Recording for VibeAi in System Settings, then quit and reopen the app"
             }
 
         case "microphone":
@@ -512,7 +512,7 @@ class ChatToolExecutor {
             if appState.hasAccessibilityPermission {
                 return "granted"
             } else {
-                return "pending - user needs to toggle Accessibility for Omi in System Settings"
+                return "pending - user needs to toggle Accessibility for VibeAi in System Settings"
             }
 
         case "automation":
@@ -523,7 +523,7 @@ class ChatToolExecutor {
             if appState.hasAutomationPermission {
                 return "granted"
             } else {
-                return "pending - user needs to toggle Automation for Omi in System Settings"
+                return "pending - user needs to toggle Automation for VibeAi in System Settings"
             }
 
         default:

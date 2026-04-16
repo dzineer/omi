@@ -323,7 +323,7 @@ class FloatingControlBarWindow: NSWindow, NSWindowDelegate {
         }
         setupInputHeightObserver()
 
-        // Make the window key so the OmiTextEditor's focusOnAppear can take effect.
+        // Make the window key so the VibeAITextEditor's focusOnAppear can take effect.
         // The text editor itself handles focusing via updateNSView once it's in the window.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
             self?.makeKeyAndOrderFront(nil)
@@ -671,7 +671,7 @@ class FloatingControlBarManager {
     private var chatCancellable: AnyCancellable?
     private var chatProvider: ChatProvider?
 
-    /// Whether the user has enabled the Ask Omi bar (persisted across launches).
+    /// Whether the user has enabled the Ask VibeAi bar (persisted across launches).
     /// Defaults to true for new users.
     var isEnabled: Bool {
         get {

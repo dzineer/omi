@@ -20,7 +20,7 @@ struct SettingsPage: View {
                              ? selectedAdvancedSubsection!.rawValue
                              : selectedSection.rawValue)
                             .scaledFont(size: 28, weight: .bold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
                             .id(selectedSection)
                             .transition(.opacity)
                             .animation(.easeInOut(duration: 0.15), value: selectedSection)
@@ -53,7 +53,7 @@ struct SettingsPage: View {
                 }
             }
         }
-        .background(OmiColors.backgroundSecondary.opacity(0.3))
+        .background(VibeAIColors.backgroundSecondary.opacity(0.3))
         .onAppear {
             AnalyticsManager.shared.settingsPageOpened()
         }
@@ -81,7 +81,7 @@ struct SettingsContentView: View {
     @State private var isToggling: Bool = false
     @State private var permissionError: String?
 
-    // Ask Omi floating bar state
+    // Ask VibeAi floating bar state
     @State private var showAskOmiBar: Bool = false
 
     // Transcription state
@@ -255,7 +255,7 @@ struct SettingsContentView: View {
         case memoryAssistant = "Memory Assistant"
         case analysisThrottle = "Analysis Throttle"
         case goals = "Goals"
-        case askOmiFloatingBar = "Ask Omi Floating Bar"
+        case askOmiFloatingBar = "Ask VibeAi Floating Bar"
         case preferences = "Preferences"
         case troubleshooting = "Troubleshooting"
 
@@ -408,14 +408,14 @@ struct SettingsContentView: View {
             settingsCard(settingId: "general.rewind") {
                 HStack(spacing: 16) {
                     Circle()
-                        .fill((isMonitoring || isTranscribing) ? OmiColors.success : OmiColors.textTertiary.opacity(0.3))
+                        .fill((isMonitoring || isTranscribing) ? VibeAIColors.success : VibeAIColors.textTertiary.opacity(0.3))
                         .frame(width: 12, height: 12)
-                        .shadow(color: (isMonitoring || isTranscribing) ? OmiColors.success.opacity(0.5) : .clear, radius: 6)
+                        .shadow(color: (isMonitoring || isTranscribing) ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Rewind")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(permissionError ?? transcriptionError ?? {
                             if isMonitoring && isTranscribing {
@@ -429,7 +429,7 @@ struct SettingsContentView: View {
                             }
                         }())
                             .scaledFont(size: 13)
-                            .foregroundColor((permissionError ?? transcriptionError) != nil ? OmiColors.warning : OmiColors.textTertiary)
+                            .foregroundColor((permissionError ?? transcriptionError) != nil ? VibeAIColors.warning : VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -459,20 +459,20 @@ struct SettingsContentView: View {
                     HStack(spacing: 16) {
                         Circle()
                             .fill(appState.hasNotificationPermission && !appState.isNotificationBannerDisabled
-                                  ? OmiColors.success
-                                  : (appState.isNotificationBannerDisabled ? OmiColors.warning : OmiColors.textTertiary.opacity(0.3)))
+                                  ? VibeAIColors.success
+                                  : (appState.isNotificationBannerDisabled ? VibeAIColors.warning : VibeAIColors.textTertiary.opacity(0.3)))
                             .frame(width: 12, height: 12)
                             .shadow(color: appState.hasNotificationPermission && !appState.isNotificationBannerDisabled
-                                    ? OmiColors.success.opacity(0.5) : .clear, radius: 6)
+                                    ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Notifications")
                                 .scaledFont(size: 16, weight: .semibold)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text(notificationStatusText)
                                 .scaledFont(size: 13)
-                                .foregroundColor(appState.isNotificationBannerDisabled ? OmiColors.warning : OmiColors.textTertiary)
+                                .foregroundColor(appState.isNotificationBannerDisabled ? VibeAIColors.warning : VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -511,7 +511,7 @@ struct SettingsContentView: View {
                                     .padding(.vertical, 6)
                                     .background(
                                         RoundedRectangle(cornerRadius: 6)
-                                            .fill(appState.isNotificationBannerDisabled ? OmiColors.warning : OmiColors.purplePrimary)
+                                            .fill(appState.isNotificationBannerDisabled ? VibeAIColors.warning : VibeAIColors.purplePrimary)
                                     )
                             }
                             .buttonStyle(.plain)
@@ -523,39 +523,39 @@ struct SettingsContentView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.warning)
+                                .foregroundColor(VibeAIColors.warning)
 
                             Text("Banners disabled - you won't see visual alerts. Set style to \"Banners\" in System Settings.")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.warning)
+                                .foregroundColor(VibeAIColors.warning)
 
                             Spacer()
                         }
                         .padding(10)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(OmiColors.warning.opacity(0.1))
+                                .fill(VibeAIColors.warning.opacity(0.1))
                         )
                     }
                 }
             }
 
-            // Ask Omi floating bar toggle
+            // Ask VibeAi floating bar toggle
             settingsCard(settingId: "general.askomi") {
                 HStack(spacing: 16) {
                     Circle()
-                        .fill(showAskOmiBar ? OmiColors.success : OmiColors.textTertiary.opacity(0.3))
+                        .fill(showAskOmiBar ? VibeAIColors.success : VibeAIColors.textTertiary.opacity(0.3))
                         .frame(width: 12, height: 12)
-                        .shadow(color: showAskOmiBar ? OmiColors.success.opacity(0.5) : .clear, radius: 6)
+                        .shadow(color: showAskOmiBar ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Ask Omi")
+                        Text("Ask VibeAi")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(showAskOmiBar ? "Floating bar is visible (⌘\\)" : "Floating bar is hidden (⌘\\)")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -579,17 +579,17 @@ struct SettingsContentView: View {
                     HStack(spacing: 16) {
                         Image(systemName: "textformat.size")
                             .scaledFont(size: 16, weight: .medium)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
                             .frame(width: 12)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Font Size")
                                 .scaledFont(size: 16, weight: .semibold)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("Scale: \(Int(fontScaleSettings.scale * 100))%")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -599,7 +599,7 @@ struct SettingsContentView: View {
                                 fontScaleSettings.resetToDefault()
                             }
                             .scaledFont(size: 12, weight: .medium)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
                             .buttonStyle(.plain)
                         }
                     }
@@ -607,19 +607,19 @@ struct SettingsContentView: View {
                     HStack(spacing: 12) {
                         Text("A")
                             .scaledFont(size: 12, weight: .medium)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Slider(value: $fontScaleSettings.scale, in: 0.5...2.0, step: 0.05)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
 
                         Text("A")
                             .scaledFont(size: 18, weight: .medium)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Text("The quick brown fox jumps over the lazy dog")
                         .scaledFont(size: 14)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 4)
 
@@ -642,12 +642,12 @@ struct SettingsContentView: View {
                                 Text("Reset Window Size")
                                     .scaledFont(size: 12, weight: .medium)
                             }
-                            .foregroundColor(OmiColors.textSecondary)
+                            .foregroundColor(VibeAIColors.textSecondary)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(OmiColors.backgroundTertiary)
+                                    .fill(VibeAIColors.backgroundTertiary)
                             )
                         }
                         .buttonStyle(.plain)
@@ -671,22 +671,22 @@ struct SettingsContentView: View {
             settingsCard(settingId: "rewind.screencapture") {
                 HStack(spacing: 16) {
                     Circle()
-                        .fill(isMonitoring ? OmiColors.success : OmiColors.textTertiary.opacity(0.3))
+                        .fill(isMonitoring ? VibeAIColors.success : VibeAIColors.textTertiary.opacity(0.3))
                         .frame(width: 12, height: 12)
-                        .shadow(color: isMonitoring ? OmiColors.success.opacity(0.5) : .clear, radius: 6)
+                        .shadow(color: isMonitoring ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
 
                     Image(systemName: "rectangle.dashed.badge.record")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.purplePrimary)
+                        .foregroundColor(VibeAIColors.purplePrimary)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Screen Capture")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(permissionError ?? (isMonitoring ? "Capturing screen content" : "Screen capture is paused"))
                             .scaledFont(size: 13)
-                            .foregroundColor(permissionError != nil ? OmiColors.warning : OmiColors.textTertiary)
+                            .foregroundColor(permissionError != nil ? VibeAIColors.warning : VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -712,22 +712,22 @@ struct SettingsContentView: View {
             settingsCard(settingId: "rewind.audiorecording") {
                 HStack(spacing: 16) {
                     Circle()
-                        .fill(isTranscribing ? OmiColors.success : OmiColors.textTertiary.opacity(0.3))
+                        .fill(isTranscribing ? VibeAIColors.success : VibeAIColors.textTertiary.opacity(0.3))
                         .frame(width: 12, height: 12)
-                        .shadow(color: isTranscribing ? OmiColors.success.opacity(0.5) : .clear, radius: 6)
+                        .shadow(color: isTranscribing ? VibeAIColors.success.opacity(0.5) : .clear, radius: 6)
 
                     Image(systemName: "mic.fill")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.purplePrimary)
+                        .foregroundColor(VibeAIColors.purplePrimary)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Audio Recording")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(transcriptionError ?? (isTranscribing ? "Recording and transcribing audio" : "Audio recording is paused"))
                             .scaledFont(size: 13)
-                            .foregroundColor(transcriptionError != nil ? OmiColors.warning : OmiColors.textTertiary)
+                            .foregroundColor(transcriptionError != nil ? VibeAIColors.warning : VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -755,21 +755,21 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "internaldrive.fill")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Storage")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             if let stats = rewindStats {
                                 Text("\(stats.total) frames • \(RewindStorage.formatBytes(stats.storageSize))")
                                     .scaledFont(size: 13)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             } else {
                                 Text("Loading...")
                                     .scaledFont(size: 13)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
                         }
 
@@ -787,16 +787,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "eye.slash.fill")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Excluded Apps")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("Screen capture is paused when these apps are active")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -809,7 +809,7 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // List of excluded apps
                     if rewindSettings.excludedApps.isEmpty {
@@ -818,10 +818,10 @@ struct SettingsContentView: View {
                             VStack(spacing: 8) {
                                 Image(systemName: "checkmark.shield")
                                     .scaledFont(size: 24)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                                 Text("No apps excluded")
                                     .scaledFont(size: 13)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
                             .padding(.vertical, 16)
                             Spacer()
@@ -840,7 +840,7 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Add app section
                     AddExcludedAppView(
@@ -858,16 +858,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "battery.75percent")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Battery Optimization")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("Pause text recognition on battery to save energy. OCR runs automatically when plugged back in.")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -885,16 +885,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "clock.fill")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Data Retention")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("How long to keep screen recordings")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -923,11 +923,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "globe")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Language Mode")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
                     }
@@ -942,21 +942,21 @@ struct SettingsContentView: View {
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: transcriptionAutoDetect ? "checkmark.circle.fill" : "circle")
                                 .scaledFont(size: 20)
-                                .foregroundColor(transcriptionAutoDetect ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                                .foregroundColor(transcriptionAutoDetect ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Auto-Detect (Multi-Language)")
                                     .scaledFont(size: 14, weight: .medium)
-                                    .foregroundColor(OmiColors.textPrimary)
+                                    .foregroundColor(VibeAIColors.textPrimary)
 
                                 Text("Automatically detects and transcribes:")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
 
                                 // List of supported languages
                                 Text("English, Spanish, French, German, Hindi, Russian, Portuguese, Japanese, Italian, Dutch")
                                     .scaledFont(size: 11)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
 
@@ -965,10 +965,10 @@ struct SettingsContentView: View {
                         .padding(12)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(transcriptionAutoDetect ? OmiColors.purplePrimary.opacity(0.1) : Color.clear)
+                                .fill(transcriptionAutoDetect ? VibeAIColors.purplePrimary.opacity(0.1) : Color.clear)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .stroke(transcriptionAutoDetect ? OmiColors.purplePrimary.opacity(0.3) : OmiColors.backgroundQuaternary, lineWidth: 1)
+                                        .stroke(transcriptionAutoDetect ? VibeAIColors.purplePrimary.opacity(0.3) : VibeAIColors.backgroundQuaternary, lineWidth: 1)
                                 )
                         )
                     }
@@ -984,23 +984,23 @@ struct SettingsContentView: View {
                         HStack(alignment: .top, spacing: 12) {
                             Image(systemName: !transcriptionAutoDetect ? "checkmark.circle.fill" : "circle")
                                 .scaledFont(size: 20)
-                                .foregroundColor(!transcriptionAutoDetect ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                                .foregroundColor(!transcriptionAutoDetect ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("Single Language (Better Accuracy)")
                                     .scaledFont(size: 14, weight: .medium)
-                                    .foregroundColor(OmiColors.textPrimary)
+                                    .foregroundColor(VibeAIColors.textPrimary)
 
                                 Text("Best for speaking in one specific language")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
 
                                 // Language picker (only shown when single language is selected)
                                 if !transcriptionAutoDetect {
                                     HStack {
                                         Text("Language:")
                                             .scaledFont(size: 12)
-                                            .foregroundColor(OmiColors.textTertiary)
+                                            .foregroundColor(VibeAIColors.textTertiary)
 
                                         Picker("", selection: $transcriptionLanguage) {
                                             ForEach(languageOptions, id: \.0) { option in
@@ -1028,10 +1028,10 @@ struct SettingsContentView: View {
                         .padding(12)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(!transcriptionAutoDetect ? OmiColors.purplePrimary.opacity(0.1) : Color.clear)
+                                .fill(!transcriptionAutoDetect ? VibeAIColors.purplePrimary.opacity(0.1) : Color.clear)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .stroke(!transcriptionAutoDetect ? OmiColors.purplePrimary.opacity(0.3) : OmiColors.backgroundQuaternary, lineWidth: 1)
+                                        .stroke(!transcriptionAutoDetect ? VibeAIColors.purplePrimary.opacity(0.3) : VibeAIColors.backgroundQuaternary, lineWidth: 1)
                                 )
                         )
                     }
@@ -1041,11 +1041,11 @@ struct SettingsContentView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "info.circle")
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("Single language mode supports 42 languages including Ukrainian, Russian, and more.")
                             .scaledFont(size: 11)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                 }
             }
@@ -1056,16 +1056,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "text.book.closed")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Custom Vocabulary")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("Improve recognition of names, brands, and technical terms")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -1073,7 +1073,7 @@ struct SettingsContentView: View {
                         if !vocabularyList.isEmpty {
                             Text("\(vocabularyList.count) terms")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
                     }
 
@@ -1084,14 +1084,14 @@ struct SettingsContentView: View {
                                 HStack(spacing: 4) {
                                     Text(term)
                                         .scaledFont(size: 12)
-                                        .foregroundColor(OmiColors.textSecondary)
+                                        .foregroundColor(VibeAIColors.textSecondary)
 
                                     Button(action: {
                                         removeVocabularyWord(term)
                                     }) {
                                         Image(systemName: "xmark")
                                             .scaledFont(size: 9, weight: .medium)
-                                            .foregroundColor(OmiColors.textTertiary)
+                                            .foregroundColor(VibeAIColors.textTertiary)
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -1099,14 +1099,14 @@ struct SettingsContentView: View {
                                 .padding(.vertical, 6)
                                 .background(
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(OmiColors.backgroundQuaternary)
+                                        .fill(VibeAIColors.backgroundQuaternary)
                                 )
                             }
                         }
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Add new word input
                     HStack(spacing: 8) {
@@ -1121,7 +1121,7 @@ struct SettingsContentView: View {
                         }) {
                             Image(systemName: "plus.circle.fill")
                                 .scaledFont(size: 20)
-                                .foregroundColor(newVocabularyWord.trimmingCharacters(in: .whitespaces).isEmpty ? OmiColors.textTertiary : OmiColors.purplePrimary)
+                                .foregroundColor(newVocabularyWord.trimmingCharacters(in: .whitespaces).isEmpty ? VibeAIColors.textTertiary : VibeAIColors.purplePrimary)
                         }
                         .buttonStyle(.plain)
                         .disabled(newVocabularyWord.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -1129,7 +1129,7 @@ struct SettingsContentView: View {
 
                     Text("Press Enter or click + to add • Click × to remove")
                         .scaledFont(size: 11)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
             }
 
@@ -1139,16 +1139,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "waveform.badge.minus")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Local VAD Gate")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("Uses on-device voice activity detection to skip silence, reducing Deepgram API usage. May save ~40% on transcription costs.")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
 
@@ -1170,16 +1170,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "square.stack.3d.up")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Batch Transcription")
                                 .scaledFont(size: 15, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Text("Transcribes audio in chunks at silence boundaries. Better accuracy, but transcript appears with a few seconds delay.")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
 
@@ -1251,11 +1251,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "bell.badge.fill")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Notifications")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -1269,11 +1269,11 @@ struct SettingsContentView: View {
 
                     Text("Control how often you receive notifications")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if notificationsEnabled {
                         Divider()
-                            .background(OmiColors.backgroundQuaternary)
+                            .background(VibeAIColors.backgroundQuaternary)
 
                         settingRow(title: "Frequency", subtitle: "How often to receive notifications", settingId: "notifications.frequency") {
                             Picker("", selection: $notificationFrequency) {
@@ -1337,11 +1337,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "text.badge.checkmark")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Daily Summary")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -1355,11 +1355,11 @@ struct SettingsContentView: View {
 
                     Text("Receive a daily summary of your conversations and activities")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if dailySummaryEnabled {
                         Divider()
-                            .background(OmiColors.backgroundQuaternary)
+                            .background(VibeAIColors.backgroundQuaternary)
 
                         settingRow(title: "Summary Time", subtitle: "When to send your daily summary", settingId: "notifications.summarytime") {
                             Picker("", selection: $dailySummaryHour) {
@@ -1390,12 +1390,12 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "mic.fill")
                             .scaledFont(size: 14)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
                             .frame(width: 20)
 
                         Text("Store Recordings")
                             .scaledFont(size: 14, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -1409,9 +1409,9 @@ struct SettingsContentView: View {
                     }
                     .padding(.bottom, 4)
 
-                    Text("Allow Omi to store audio recordings of your conversations")
+                    Text("Allow VibeAi to store audio recordings of your conversations")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                         .padding(.leading, 34)
 
                     Divider()
@@ -1420,12 +1420,12 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "cloud.fill")
                             .scaledFont(size: 14)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
                             .frame(width: 20)
 
                         Text("Private Cloud Sync")
                             .scaledFont(size: 14, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -1441,7 +1441,7 @@ struct SettingsContentView: View {
 
                     Text("Sync your data securely to your private cloud storage")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                         .padding(.leading, 34)
                 }
             }
@@ -1452,12 +1452,12 @@ struct SettingsContentView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "shield.lefthalf.filled")
                             .scaledFont(size: 14)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
                             .frame(width: 20)
 
                         Text("Encryption")
                             .scaledFont(size: 14, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
                     }
 
                     HStack(spacing: 10) {
@@ -1468,7 +1468,7 @@ struct SettingsContentView: View {
 
                         Text("Server-side encryption")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textSecondary)
+                            .foregroundColor(VibeAIColors.textSecondary)
 
                         Text("Active")
                             .scaledFont(size: 10, weight: .semibold)
@@ -1482,7 +1482,7 @@ struct SettingsContentView: View {
 
                     Text("Your data is encrypted and stored securely with Google Cloud infrastructure.")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                         .padding(.leading, 34)
                 }
             }
@@ -1498,18 +1498,18 @@ struct SettingsContentView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "list.bullet")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.purplePrimary)
+                                .foregroundColor(VibeAIColors.purplePrimary)
                                 .frame(width: 20)
 
                             Text("What We Track")
                                 .scaledFont(size: 14, weight: .medium)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             Spacer()
 
                             Image(systemName: "chevron.right")
                                 .scaledFont(size: 11, weight: .semibold)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .rotationEffect(.degrees(isTrackingExpanded ? 90 : 0))
                         }
                     }
@@ -1542,12 +1542,12 @@ struct SettingsContentView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "hand.raised.fill")
                             .scaledFont(size: 14)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
                             .frame(width: 20)
 
                         Text("Privacy Guarantees")
                             .scaledFont(size: 14, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -1570,17 +1570,17 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "person.circle.fill")
                         .scaledFont(size: 40)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(AuthService.shared.displayName.isEmpty ? "User" : AuthService.shared.displayName)
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         if let email = AuthState.shared.userEmail {
                             Text(email)
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
                     }
 
@@ -1604,11 +1604,11 @@ struct SettingsContentView: View {
 //                    VStack(alignment: .leading, spacing: 4) {
 //                        Text("Upgrade to Pro")
 //                            .scaledFont(size: 15, weight: .medium)
-//                            .foregroundColor(OmiColors.textPrimary)
+//                            .foregroundColor(VibeAIColors.textPrimary)
 //
 //                        Text("Unlock all features and unlimited usage")
 //                            .scaledFont(size: 13)
-//                            .foregroundColor(OmiColors.textTertiary)
+//                            .foregroundColor(VibeAIColors.textTertiary)
 //                    }
 //
 //                    Spacer()
@@ -1619,7 +1619,7 @@ struct SettingsContentView: View {
 //                        }
 //                    }
 //                    .buttonStyle(.borderedProminent)
-//                    .tint(OmiColors.purplePrimary)
+//                    .tint(VibeAIColors.purplePrimary)
 //                }
 //            }
         }
@@ -1635,16 +1635,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "cpu")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("AI Provider")
                             .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
                         Picker("", selection: $chatBridgeMode) {
-                            Text("Omi account").tag("agentSDK")
+                            Text("VibeAi account").tag("agentSDK")
                             Text("Your Claude Account").tag("claudeCode")
                         }
                         .pickerStyle(.menu)
@@ -1660,9 +1660,9 @@ struct SettingsContentView: View {
 
                     Text(chatBridgeMode == "claudeCode"
                          ? "Using your Claude Pro/Max subscription. You'll be prompted to sign in with your Claude account."
-                         : "Using your Omi account.")
+                         : "Using your VibeAi account.")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if chatBridgeMode == "claudeCode" && chatProvider?.isClaudeConnected == true {
                         Divider()
@@ -1673,7 +1673,7 @@ struct SettingsContentView: View {
                                 .scaledFont(size: 12)
                             Text("Connected to Claude")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
 
                             Spacer()
 
@@ -1699,11 +1699,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "bubble.left.and.bubble.right")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("Ask Mode")
                             .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -1715,7 +1715,7 @@ struct SettingsContentView: View {
 
                     Text("When enabled, shows an Ask/Act toggle in the chat. Ask mode restricts the AI to read-only actions. When disabled, the AI always runs in Act mode.")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
             }
 
@@ -1725,11 +1725,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "folder")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("Workspace")
                             .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -1769,17 +1769,17 @@ struct SettingsContentView: View {
                     if !aiChatWorkingDirectory.isEmpty {
                         Text(aiChatWorkingDirectory)
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                             .lineLimit(1)
                             .truncationMode(.middle)
 
                         Text("Project-level CLAUDE.md and skills will be discovered from this directory")
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     } else {
                         Text("No workspace set. Set a project directory to discover project-level CLAUDE.md and skills.")
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                 }
             }
@@ -1790,11 +1790,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "doc.text")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("CLAUDE.md")
                             .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
                     }
@@ -1804,12 +1804,12 @@ struct SettingsContentView: View {
                         HStack {
                             Text("Global")
                                 .scaledFont(size: 11, weight: .medium)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(
                                     RoundedRectangle(cornerRadius: 4)
-                                        .fill(OmiColors.backgroundPrimary.opacity(0.5))
+                                        .fill(VibeAIColors.backgroundPrimary.opacity(0.5))
                                 )
 
                             Spacer()
@@ -1834,13 +1834,13 @@ struct SettingsContentView: View {
                             let sizeKB = Double(content.utf8.count) / 1024.0
                             Text("\(path) (\(String(format: "%.1f", sizeKB)) KB)")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         } else {
                             Text("No CLAUDE.md found at ~/.claude/CLAUDE.md")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
                     }
 
@@ -1852,12 +1852,12 @@ struct SettingsContentView: View {
                             HStack {
                                 Text("Project")
                                     .scaledFont(size: 11, weight: .medium)
-                                    .foregroundColor(OmiColors.purplePrimary)
+                                    .foregroundColor(VibeAIColors.purplePrimary)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(
                                         RoundedRectangle(cornerRadius: 4)
-                                            .fill(OmiColors.purplePrimary.opacity(0.1))
+                                            .fill(VibeAIColors.purplePrimary.opacity(0.1))
                                     )
 
                                 Spacer()
@@ -1882,13 +1882,13 @@ struct SettingsContentView: View {
                                 let sizeKB = Double(content.utf8.count) / 1024.0
                                 Text("\(path) (\(String(format: "%.1f", sizeKB)) KB)")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                                     .lineLimit(1)
                                     .truncationMode(.middle)
                             } else {
                                 Text("No CLAUDE.md found at \(aiChatWorkingDirectory)/CLAUDE.md")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
                         }
                     }
@@ -1901,16 +1901,16 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "sparkles")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         if aiChatProjectDiscoveredSkills.isEmpty {
                             Text("Skills (\(aiChatDiscoveredSkills.count) discovered)")
                                 .scaledFont(size: 15, weight: .semibold)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
                         } else {
                             Text("Skills (\(aiChatDiscoveredSkills.count) global + \(aiChatProjectDiscoveredSkills.count) project)")
                                 .scaledFont(size: 15, weight: .semibold)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
                         }
 
                         Spacer()
@@ -1930,28 +1930,28 @@ struct SettingsContentView: View {
                     if allSkills.isEmpty {
                         Text("No skills found in ~/.claude/skills/")
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     } else {
                         Text("Skill descriptions are included in the AI chat system prompt")
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         // Search field
                         HStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
 
                             TextField("Search skills...", text: $skillSearchQuery)
                                 .textFieldStyle(.plain)
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
 
                             if !skillSearchQuery.isEmpty {
                                 Button(action: { skillSearchQuery = "" }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .scaledFont(size: 12)
-                                        .foregroundColor(OmiColors.textTertiary)
+                                        .foregroundColor(VibeAIColors.textTertiary)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -1959,7 +1959,7 @@ struct SettingsContentView: View {
                         .padding(8)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
-                                .fill(OmiColors.backgroundPrimary.opacity(0.5))
+                                .fill(VibeAIColors.backgroundPrimary.opacity(0.5))
                         )
 
                         ScrollView {
@@ -1992,23 +1992,23 @@ struct SettingsContentView: View {
                                             HStack(spacing: 6) {
                                                 Text(skill.name)
                                                     .scaledFont(size: 13, weight: .medium)
-                                                    .foregroundColor(OmiColors.textPrimary)
+                                                    .foregroundColor(VibeAIColors.textPrimary)
 
                                                 Text(origin)
                                                     .scaledFont(size: 9, weight: .medium)
-                                                    .foregroundColor(origin == "Project" ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                                                    .foregroundColor(origin == "Project" ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
                                                     .padding(.horizontal, 4)
                                                     .padding(.vertical, 1)
                                                     .background(
                                                         RoundedRectangle(cornerRadius: 3)
-                                                            .fill(origin == "Project" ? OmiColors.purplePrimary.opacity(0.1) : OmiColors.backgroundPrimary.opacity(0.5))
+                                                            .fill(origin == "Project" ? VibeAIColors.purplePrimary.opacity(0.1) : VibeAIColors.backgroundPrimary.opacity(0.5))
                                                     )
                                             }
 
                                             if !skill.description.isEmpty {
                                                 Text(skill.description)
                                                     .scaledFont(size: 11)
-                                                    .foregroundColor(OmiColors.textTertiary)
+                                                    .foregroundColor(VibeAIColors.textTertiary)
                                                     .lineLimit(1)
                                                     .truncationMode(.tail)
                                             }
@@ -2045,11 +2045,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "globe")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("Browser Extension")
                             .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -2060,7 +2060,7 @@ struct SettingsContentView: View {
                                     .frame(width: 6, height: 6)
                                 Text("Connected")
                                     .scaledFont(size: 11)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
                         }
 
@@ -2074,7 +2074,7 @@ struct SettingsContentView: View {
 
                     Text("Lets the AI use your Chrome browser with all your logged-in sessions.")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if playwrightUseExtension {
                         if playwrightExtensionToken.isEmpty {
@@ -2096,11 +2096,11 @@ struct SettingsContentView: View {
                             HStack(spacing: 8) {
                                 Text("Token")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
 
                                 Text(String(playwrightExtensionToken.prefix(8)) + "...")
                                     .scaledFont(size: 12, weight: .medium)
-                                    .foregroundColor(OmiColors.textPrimary)
+                                    .foregroundColor(VibeAIColors.textPrimary)
                                     .font(.system(.body, design: .monospaced))
 
                                 Spacer()
@@ -2143,11 +2143,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "hammer")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
 
                         Text("Dev Mode")
                             .scaledFont(size: 15, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -2162,7 +2162,7 @@ struct SettingsContentView: View {
 
                     Text("Let the AI modify the app's source code, rebuild it, and add custom features.")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if devModeEnabled {
                         VStack(alignment: .leading, spacing: 8) {
@@ -2172,7 +2172,7 @@ struct SettingsContentView: View {
                                     .scaledFont(size: 12)
                                 Text("AI can modify UI, add features, create custom SQLite tables")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                             }
                             HStack(spacing: 6) {
                                 Image(systemName: "lock.fill")
@@ -2180,7 +2180,7 @@ struct SettingsContentView: View {
                                     .scaledFont(size: 12)
                                 Text("Backend API, auth, and sync logic are read-only")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                             }
                         }
                     }
@@ -2216,14 +2216,14 @@ struct SettingsContentView: View {
             HStack {
                 Text(fileViewerTitle)
                     .scaledFont(size: 16, weight: .semibold)
-                    .foregroundColor(OmiColors.textPrimary)
+                    .foregroundColor(VibeAIColors.textPrimary)
 
                 Spacer()
 
                 Button(action: { showFileViewer = false }) {
                     Image(systemName: "xmark.circle.fill")
                         .scaledFont(size: 18)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
                 .buttonStyle(.plain)
             }
@@ -2235,14 +2235,14 @@ struct SettingsContentView: View {
             ScrollView {
                 Text(fileViewerContent)
                     .font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
             }
         }
         .frame(width: 600, height: 500)
-        .background(OmiColors.backgroundSecondary)
+        .background(VibeAIColors.backgroundSecondary)
     }
 
     private func refreshAIChatConfig() {
@@ -2394,11 +2394,11 @@ struct SettingsContentView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "brain")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("AI User Profile")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -2418,13 +2418,13 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     if let text = aiProfileText {
                         if isEditingAIProfile {
                             TextEditor(text: $aiProfileEditText)
                                 .scaledFont(size: 13, design: .monospaced)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .scrollContentBackground(.hidden)
                                 .frame(maxHeight: 200)
 
@@ -2457,7 +2457,7 @@ struct SettingsContentView: View {
                             ScrollView {
                                 Text(text)
                                     .scaledFont(size: 13, design: .monospaced)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                     .textSelection(.enabled)
                                     .if_available_writingToolsNone()
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -2468,7 +2468,7 @@ struct SettingsContentView: View {
                                 if let date = aiProfileGeneratedAt {
                                     Text("Last updated: \(date.formatted(.relative(presentation: .named)))")
                                         .scaledFont(size: 12)
-                                        .foregroundColor(OmiColors.textTertiary)
+                                        .foregroundColor(VibeAIColors.textTertiary)
                                 }
 
                                 Spacer()
@@ -2476,7 +2476,7 @@ struct SettingsContentView: View {
                                 if aiProfileDataSourcesUsed > 0 {
                                     Text("Data sources: \(aiProfileDataSourcesUsed) items")
                                         .scaledFont(size: 12)
-                                        .foregroundColor(OmiColors.textTertiary)
+                                        .foregroundColor(VibeAIColors.textTertiary)
                                 }
 
                                 Button(action: {
@@ -2503,7 +2503,7 @@ struct SettingsContentView: View {
                     } else if !isGeneratingAIProfile {
                         Text("Your AI user profile will be generated automatically on next launch, or click \"Generate Now\" to create it now.")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     } else {
                         HStack {
                             Spacer()
@@ -2511,7 +2511,7 @@ struct SettingsContentView: View {
                                 ProgressView()
                                 Text("Generating profile...")
                                     .scaledFont(size: 13)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
                             Spacer()
                         }
@@ -2550,17 +2550,17 @@ struct SettingsContentView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "chart.bar")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Your Stats")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     if let stats = advancedStats {
                         statRow(label: "Conversations", value: stats.conversations)
@@ -2569,7 +2569,7 @@ struct SettingsContentView: View {
                             HStack {
                                 Text("AI Chat Messages")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Spacer()
                                 ProgressView()
                                     .controlSize(.mini)
@@ -2598,7 +2598,7 @@ struct SettingsContentView: View {
                     } else {
                         Text("Unable to load stats")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                 }
             }
@@ -2618,17 +2618,17 @@ struct SettingsContentView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "lock.shield")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Feature Tiers")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Tier picker — radio-style selector
                     VStack(alignment: .leading, spacing: 6) {
@@ -2643,11 +2643,11 @@ struct SettingsContentView: View {
 
                     if currentTierLevel > 0 {
                         Divider()
-                            .background(OmiColors.backgroundQuaternary)
+                            .background(VibeAIColors.backgroundQuaternary)
 
                         Text("Progress")
                             .scaledFont(size: 13, weight: .semibold)
-                            .foregroundColor(OmiColors.textSecondary)
+                            .foregroundColor(VibeAIColors.textSecondary)
 
                         // Tier 1 — always unlocked
                         tierFeatureRow(
@@ -2708,11 +2708,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "eye.fill")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Focus Assistant")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -2727,11 +2727,11 @@ struct SettingsContentView: View {
 
                     Text("Detect distractions and help you stay focused")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if focusEnabled {
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     settingRow(title: "Visual Glow Effect", subtitle: "Show colored border when focus changes", settingId: "advanced.focusassistant.glow") {
                         Toggle("", isOn: $glowOverlayEnabled)
@@ -2777,17 +2777,17 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Excluded Apps for Focus Analysis
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Excluded Apps")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("Focus coaching won't trigger for these apps")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         // Built-in system exclusions (non-removable)
@@ -2799,7 +2799,7 @@ struct SettingsContentView: View {
 
                                         Text(appName)
                                             .scaledFont(size: 13)
-                                            .foregroundColor(OmiColors.textTertiary)
+                                            .foregroundColor(VibeAIColors.textTertiary)
 
                                         Spacer()
                                     }
@@ -2810,9 +2810,9 @@ struct SettingsContentView: View {
                         } label: {
                             Text("System apps always excluded (\(TaskAssistantSettings.builtInExcludedApps.count))")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
-                        .tint(OmiColors.textTertiary)
+                        .tint(VibeAIColors.textTertiary)
 
                         if !focusExcludedApps.isEmpty {
                             LazyVStack(spacing: 8) {
@@ -2849,11 +2849,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "checklist")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Task Assistant")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -2868,21 +2868,21 @@ struct SettingsContentView: View {
 
                     Text("Extract tasks and action items from your screen")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if taskEnabled {
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Task Agent (chat / investigate) toggle
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Task Agent")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("Investigate button and sidebar chat for tasks")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
@@ -2900,10 +2900,10 @@ struct SettingsContentView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Working Directory")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text(taskAgentWorkingDirectory.isEmpty ? "Not set — chat agent defaults to ~" : taskAgentWorkingDirectory)
                                 .scaledFont(size: 11)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                         }
@@ -2932,12 +2932,12 @@ struct SettingsContentView: View {
                                 TaskAgentSettings.shared.workingDirectory = ""
                             }
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                         }
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Extraction Interval Slider
                     VStack(alignment: .leading, spacing: 8) {
@@ -2945,17 +2945,17 @@ struct SettingsContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Extraction Interval")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Text("How often to scan for new tasks")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
 
                             Spacer()
 
                             Text(formatExtractionInterval(taskExtractionInterval))
                                 .scaledFont(size: 13, weight: .medium)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .frame(width: 80, alignment: .trailing)
                         }
 
@@ -2963,7 +2963,7 @@ struct SettingsContentView: View {
                             get: { Double(taskIntervalSliderIndex) },
                             set: { taskExtractionInterval = extractionIntervalOptions[Int($0)] }
                         ), in: 0...Double(extractionIntervalOptions.count - 1), step: 1)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
                             .onChange(of: taskExtractionInterval) { _, newValue in
                                 TaskAssistantSettings.shared.extractionInterval = newValue
                                 SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(task: TaskSettingsResponse(extractionInterval: newValue)))
@@ -2976,22 +2976,22 @@ struct SettingsContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Minimum Confidence")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Text("Only show tasks above this confidence level")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
 
                             Spacer()
 
                             Text("\(Int(taskMinConfidence * 100))%")
                                 .scaledFont(size: 13, weight: .medium)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .frame(width: 40, alignment: .trailing)
                         }
 
                         Slider(value: $taskMinConfidence, in: 0.3...0.9, step: 0.1)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
                             .onChange(of: taskMinConfidence) { _, newValue in
                                 TaskAssistantSettings.shared.minConfidence = newValue
                                 SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(task: TaskSettingsResponse(minConfidence: newValue)))
@@ -3029,17 +3029,17 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Allowed Apps for Task Extraction (Whitelist)
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Allowed Apps")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("Tasks will only be extracted from these apps. Browsers are also filtered by keywords below.")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         // Editable list of all allowed apps
@@ -3050,15 +3050,15 @@ struct SettingsContentView: View {
 
                                     Text(appName)
                                         .scaledFont(size: 13)
-                                        .foregroundColor(OmiColors.textPrimary)
+                                        .foregroundColor(VibeAIColors.textPrimary)
 
                                     if TaskAssistantSettings.isBrowser(appName) {
                                         Text("browser")
                                             .scaledFont(size: 10)
-                                            .foregroundColor(OmiColors.purplePrimary)
+                                            .foregroundColor(VibeAIColors.purplePrimary)
                                             .padding(.horizontal, 6)
                                             .padding(.vertical, 2)
-                                            .background(OmiColors.purplePrimary.opacity(0.15))
+                                            .background(VibeAIColors.purplePrimary.opacity(0.15))
                                             .cornerRadius(4)
                                     }
 
@@ -3070,7 +3070,7 @@ struct SettingsContentView: View {
                                     } label: {
                                         Image(systemName: "xmark.circle.fill")
                                             .scaledFont(size: 14)
-                                            .foregroundColor(OmiColors.textTertiary)
+                                            .foregroundColor(VibeAIColors.textTertiary)
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -3089,17 +3089,17 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Browser Window Keywords
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Browser Window Keywords")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("For browser apps, only analyze windows whose title contains one of these keywords.")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         // Keyword chips (filterable, deletable)
@@ -3117,7 +3117,7 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Task Prioritization Re-score
                     settingRow(title: "Task Prioritization", subtitle: "Re-score all tasks by relevance to your profile and goals", settingId: "advanced.taskassistant.prioritization") {
@@ -3162,11 +3162,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "lightbulb.fill")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Advice Assistant")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -3181,11 +3181,11 @@ struct SettingsContentView: View {
 
                     Text("Get proactive tips and suggestions")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if adviceEnabled {
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Frequency Slider
                     VStack(alignment: .leading, spacing: 8) {
@@ -3193,17 +3193,17 @@ struct SettingsContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Frequency")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Text("How often to check for advice opportunities")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
 
                             Spacer()
 
                             Text(formatExtractionInterval(adviceExtractionInterval))
                                 .scaledFont(size: 13, weight: .medium)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .frame(width: 80, alignment: .trailing)
                         }
 
@@ -3211,7 +3211,7 @@ struct SettingsContentView: View {
                             get: { Double(adviceIntervalSliderIndex) },
                             set: { adviceExtractionInterval = extractionIntervalOptions[Int($0)] }
                         ), in: 0...Double(extractionIntervalOptions.count - 1), step: 1)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
                             .onChange(of: adviceExtractionInterval) { _, newValue in
                                 AdviceAssistantSettings.shared.extractionInterval = newValue
                                 SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(advice: AdviceSettingsResponse(extractionInterval: newValue)))
@@ -3224,22 +3224,22 @@ struct SettingsContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Minimum Confidence")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Text("Only show advice above this confidence level")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
 
                             Spacer()
 
                             Text("\(Int(adviceMinConfidence * 100))%")
                                 .scaledFont(size: 13, weight: .medium)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .frame(width: 40, alignment: .trailing)
                         }
 
                         Slider(value: $adviceMinConfidence, in: 0.5...0.95, step: 0.05)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
                             .onChange(of: adviceMinConfidence) { _, newValue in
                                 AdviceAssistantSettings.shared.minConfidence = newValue
                                 SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(advice: AdviceSettingsResponse(minConfidence: newValue)))
@@ -3277,17 +3277,17 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Excluded Apps for Advice
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Excluded Apps")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("Advice won't be generated from these apps")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         // Built-in system exclusions (non-removable, shared with Task Extractor)
@@ -3299,7 +3299,7 @@ struct SettingsContentView: View {
 
                                         Text(appName)
                                             .scaledFont(size: 13)
-                                            .foregroundColor(OmiColors.textTertiary)
+                                            .foregroundColor(VibeAIColors.textTertiary)
 
                                         Spacer()
                                     }
@@ -3310,9 +3310,9 @@ struct SettingsContentView: View {
                         } label: {
                             Text("System apps always excluded (\(TaskAssistantSettings.builtInExcludedApps.count))")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
-                        .tint(OmiColors.textTertiary)
+                        .tint(VibeAIColors.textTertiary)
 
                         if !adviceExcludedApps.isEmpty {
                             LazyVStack(spacing: 8) {
@@ -3349,11 +3349,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "brain.head.profile")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Memory Assistant")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -3368,11 +3368,11 @@ struct SettingsContentView: View {
 
                     Text("Extract facts and wisdom from your screen")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     if memoryEnabled {
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Extraction Interval Slider
                     VStack(alignment: .leading, spacing: 8) {
@@ -3380,17 +3380,17 @@ struct SettingsContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Extraction Interval")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Text("How often to scan for new memories")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
 
                             Spacer()
 
                             Text(formatExtractionInterval(memoryExtractionInterval))
                                 .scaledFont(size: 13, weight: .medium)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .frame(width: 80, alignment: .trailing)
                         }
 
@@ -3398,7 +3398,7 @@ struct SettingsContentView: View {
                             get: { Double(memoryIntervalSliderIndex) },
                             set: { memoryExtractionInterval = extractionIntervalOptions[Int($0)] }
                         ), in: 0...Double(extractionIntervalOptions.count - 1), step: 1)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
                             .onChange(of: memoryExtractionInterval) { _, newValue in
                                 MemoryAssistantSettings.shared.extractionInterval = newValue
                                 SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(memory: MemorySettingsResponse(extractionInterval: newValue)))
@@ -3411,22 +3411,22 @@ struct SettingsContentView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Minimum Confidence")
                                     .scaledFont(size: 14)
-                                    .foregroundColor(OmiColors.textSecondary)
+                                    .foregroundColor(VibeAIColors.textSecondary)
                                 Text("Only save memories above this confidence level")
                                     .scaledFont(size: 12)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
 
                             Spacer()
 
                             Text("\(Int(memoryMinConfidence * 100))%")
                                 .scaledFont(size: 13, weight: .medium)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                                 .frame(width: 40, alignment: .trailing)
                         }
 
                         Slider(value: $memoryMinConfidence, in: 0.5...0.95, step: 0.05)
-                            .tint(OmiColors.purplePrimary)
+                            .tint(VibeAIColors.purplePrimary)
                             .onChange(of: memoryMinConfidence) { _, newValue in
                                 MemoryAssistantSettings.shared.minConfidence = newValue
                                 SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(memory: MemorySettingsResponse(minConfidence: newValue)))
@@ -3449,17 +3449,17 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Excluded Apps for Memory Extraction
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Excluded Apps")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("Memories won't be extracted from these apps")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         // Built-in system exclusions (non-removable, shared across assistants)
@@ -3471,7 +3471,7 @@ struct SettingsContentView: View {
 
                                         Text(appName)
                                             .scaledFont(size: 13)
-                                            .foregroundColor(OmiColors.textTertiary)
+                                            .foregroundColor(VibeAIColors.textTertiary)
 
                                         Spacer()
                                     }
@@ -3482,9 +3482,9 @@ struct SettingsContentView: View {
                         } label: {
                             Text("System apps always excluded (\(TaskAssistantSettings.builtInExcludedApps.count))")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
-                        .tint(OmiColors.textTertiary)
+                        .tint(VibeAIColors.textTertiary)
 
                         if !memoryExcludedApps.isEmpty {
                             LazyVStack(spacing: 8) {
@@ -3522,17 +3522,17 @@ struct SettingsContentView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Analysis Throttle")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
                             Text("Wait before analyzing after switching apps")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
 
                         Spacer()
 
                         Text(formatAnalysisDelay(analysisDelay))
                             .scaledFont(size: 13, weight: .medium)
-                            .foregroundColor(OmiColors.textSecondary)
+                            .foregroundColor(VibeAIColors.textSecondary)
                             .frame(width: 80, alignment: .trailing)
                     }
 
@@ -3540,7 +3540,7 @@ struct SettingsContentView: View {
                         get: { Double(analysisDelaySliderIndex) },
                         set: { analysisDelay = analysisDelayOptions[Int($0)] }
                     ), in: 0...Double(analysisDelayOptions.count - 1), step: 1)
-                        .tint(OmiColors.purplePrimary)
+                        .tint(VibeAIColors.purplePrimary)
                         .onChange(of: analysisDelay) { _, newValue in
                             AssistantSettings.shared.analysisDelay = newValue
                             SettingsSyncManager.shared.pushPartialUpdate(AssistantSettingsResponse(shared: SharedAssistantSettingsResponse(analysisDelay: newValue)))
@@ -3557,21 +3557,21 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "target")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Goals")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
                     }
 
                     Text("Track personal goals with AI-powered progress detection from your conversations")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     settingRow(title: "Auto-Generate Goals", subtitle: "Automatically suggest new goals daily based on your conversations and tasks", settingId: "advanced.goals.autogenerate") {
                         Toggle("", isOn: $goalsAutoGenerateEnabled)
@@ -3599,19 +3599,19 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "bubble.left.and.bubble.right")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Multiple Chat Sessions")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(multiChatEnabled
                              ? "Create separate chat threads"
                              : "Single chat synced with mobile app")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -3627,19 +3627,19 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: conversationsCompactView ? "list.bullet" : "list.bullet.rectangle")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Compact Conversations")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(conversationsCompactView
                              ? "Showing compact conversation list"
                              : "Showing expanded conversation list")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -3655,17 +3655,17 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "power")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Launch at Login")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text(launchAtLoginManager.statusDescription)
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -3692,17 +3692,17 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "exclamationmark.bubble")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Report Issue")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text("Send app logs and report a problem")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -3717,7 +3717,7 @@ struct SettingsContentView: View {
                             .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(OmiColors.purplePrimary)
+                                    .fill(VibeAIColors.purplePrimary)
                             )
                     }
                     .buttonStyle(.plain)
@@ -3729,17 +3729,17 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "folder.badge.gearshape")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Rescan Files")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text("Re-index your files and update your AI profile")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -3752,7 +3752,7 @@ struct SettingsContentView: View {
                             .padding(.vertical, 6)
                             .background(
                                 RoundedRectangle(cornerRadius: 6)
-                                    .fill(OmiColors.purplePrimary)
+                                    .fill(VibeAIColors.purplePrimary)
                             )
                     }
                     .buttonStyle(.plain)
@@ -3772,17 +3772,17 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "arrow.counterclockwise")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.textSecondary)
+                        .foregroundColor(VibeAIColors.textSecondary)
                         .frame(width: 24, height: 24)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Reset Onboarding")
                             .scaledFont(size: 16, weight: .semibold)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Text("Restart setup wizard and reset permissions")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -3820,16 +3820,16 @@ struct SettingsContentView: View {
             HStack(spacing: 10) {
                 Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
                     .scaledFont(size: 16)
-                    .foregroundColor(isSelected ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                    .foregroundColor(isSelected ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(label)
                         .scaledFont(size: 14, weight: isSelected ? .medium : .regular)
-                        .foregroundColor(isSelected ? OmiColors.textPrimary : OmiColors.textSecondary)
+                        .foregroundColor(isSelected ? VibeAIColors.textPrimary : VibeAIColors.textSecondary)
 
                     Text(subtitle)
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
 
                 Spacer()
@@ -3838,7 +3838,7 @@ struct SettingsContentView: View {
             .padding(.horizontal, 8)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? OmiColors.purplePrimary.opacity(0.1) : Color.clear)
+                    .fill(isSelected ? VibeAIColors.purplePrimary.opacity(0.1) : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -3849,17 +3849,17 @@ struct SettingsContentView: View {
             HStack {
                 Text("Tier \(tier)")
                     .scaledFont(size: 11, weight: .semibold)
-                    .foregroundColor(unlocked ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                    .foregroundColor(unlocked ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(unlocked ? OmiColors.purplePrimary.opacity(0.15) : OmiColors.backgroundTertiary)
+                            .fill(unlocked ? VibeAIColors.purplePrimary.opacity(0.15) : VibeAIColors.backgroundTertiary)
                     )
 
                 Text(name)
                     .scaledFont(size: 14, weight: .medium)
-                    .foregroundColor(unlocked ? OmiColors.textPrimary : OmiColors.textTertiary)
+                    .foregroundColor(unlocked ? VibeAIColors.textPrimary : VibeAIColors.textTertiary)
 
                 Spacer()
 
@@ -3870,19 +3870,19 @@ struct SettingsContentView: View {
                 } else {
                     Image(systemName: "lock.fill")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
             }
 
             HStack(spacing: 8) {
                 Text(requirement)
                     .scaledFont(size: 12)
-                    .foregroundColor(OmiColors.textTertiary)
+                    .foregroundColor(VibeAIColors.textTertiary)
 
                 if let progress = progress, !unlocked {
                     Text("(\(progress))")
                         .scaledMonospacedDigitFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary.opacity(0.7))
+                        .foregroundColor(VibeAIColors.textTertiary.opacity(0.7))
                 }
             }
         }
@@ -3893,13 +3893,13 @@ struct SettingsContentView: View {
         HStack {
             Text(label)
                 .scaledFont(size: 14)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
 
             Spacer()
 
             Text(formatNumber(value))
                 .scaledMonospacedDigitFont(size: 14, weight: .medium)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
         }
     }
 
@@ -3907,7 +3907,7 @@ struct SettingsContentView: View {
         HStack {
             Text(label)
                 .scaledFont(size: 14)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
 
             Spacer()
 
@@ -3992,20 +3992,20 @@ struct SettingsContentView: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 6) {
-                                Text("Omi")
+                                Text("VibeAi")
                                     .scaledFont(size: 18, weight: .bold)
-                                    .foregroundColor(OmiColors.textPrimary)
+                                    .foregroundColor(VibeAIColors.textPrimary)
 
                                 if !updaterViewModel.activeChannelLabel.isEmpty {
                                     Text("(\(updaterViewModel.activeChannelLabel))")
                                         .scaledFont(size: 13, weight: .medium)
-                                        .foregroundColor(OmiColors.purplePrimary)
+                                        .foregroundColor(VibeAIColors.purplePrimary)
                                 }
                             }
 
                             Text("Version \(updaterViewModel.currentVersion) (\(updaterViewModel.buildNumber))")
                                 .scaledFont(size: 13)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                                 .onTapGesture {
                                     // Hidden: Option+click to enable staging channel
                                     if NSEvent.modifierFlags.contains(.option) {
@@ -4022,7 +4022,7 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     // Links
                     linkRow(title: "Visit Website", url: "https://omi.me")
@@ -4033,13 +4033,13 @@ struct SettingsContentView: View {
                         HStack {
                             Text("Privacy Policy")
                                 .scaledFont(size: 14)
-                                .foregroundColor(OmiColors.textSecondary)
+                                .foregroundColor(VibeAIColors.textSecondary)
 
                             Spacer()
 
                             Image(systemName: "arrow.right")
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textTertiary)
+                                .foregroundColor(VibeAIColors.textTertiary)
                         }
                     }
                     .buttonStyle(.plain)
@@ -4053,11 +4053,11 @@ struct SettingsContentView: View {
                     HStack {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .scaledFont(size: 16)
-                            .foregroundColor(OmiColors.purplePrimary)
+                            .foregroundColor(VibeAIColors.purplePrimary)
 
                         Text("Software Updates")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
                         Spacer()
 
@@ -4071,11 +4071,11 @@ struct SettingsContentView: View {
                     if let lastCheck = updaterViewModel.lastUpdateCheckDate {
                         Text("Last checked: \(lastCheck, style: .relative) ago")
                             .scaledFont(size: 12)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     settingRow(title: "Automatic Updates", subtitle: "Check for updates automatically in the background", settingId: "about.autoupdates") {
                         Toggle("", isOn: $updaterViewModel.automaticallyChecksForUpdates)
@@ -4092,7 +4092,7 @@ struct SettingsContentView: View {
                     }
 
                     Divider()
-                        .background(OmiColors.backgroundQuaternary)
+                        .background(VibeAIColors.backgroundQuaternary)
 
                     settingRow(title: "Update Channel", subtitle: updaterViewModel.updateChannel.description, settingId: "about.channel") {
                         Picker("", selection: $updaterViewModel.updateChannel) {
@@ -4111,16 +4111,16 @@ struct SettingsContentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "exclamationmark.bubble.fill")
                         .scaledFont(size: 16)
-                        .foregroundColor(OmiColors.purplePrimary)
+                        .foregroundColor(VibeAIColors.purplePrimary)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Report an Issue")
                             .scaledFont(size: 15, weight: .medium)
-                            .foregroundColor(OmiColors.textPrimary)
+                            .foregroundColor(VibeAIColors.textPrimary)
 
-                        Text("Help us improve Omi")
+                        Text("Help us improve VibeAi")
                             .scaledFont(size: 13)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
 
                     Spacer()
@@ -4140,14 +4140,14 @@ struct SettingsContentView: View {
         HStack {
             Text(label)
                 .scaledFont(size: 13)
-                .foregroundColor(OmiColors.textTertiary)
+                .foregroundColor(VibeAIColors.textTertiary)
             Spacer()
             Text(keys)
                 .scaledMonospacedFont(size: 13, weight: .medium)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
-                .background(OmiColors.backgroundTertiary.opacity(0.8))
+                .background(VibeAIColors.backgroundTertiary.opacity(0.8))
                 .cornerRadius(5)
         }
     }
@@ -4157,10 +4157,10 @@ struct SettingsContentView: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(OmiColors.backgroundTertiary.opacity(0.5))
+                    .fill(VibeAIColors.backgroundTertiary.opacity(0.5))
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(OmiColors.backgroundQuaternary.opacity(0.3), lineWidth: 1)
+                            .stroke(VibeAIColors.backgroundQuaternary.opacity(0.3), lineWidth: 1)
                     )
             )
         return Group {
@@ -4177,10 +4177,10 @@ struct SettingsContentView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .scaledFont(size: 14)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
                 Text(subtitle)
                     .scaledFont(size: 12)
-                    .foregroundColor(OmiColors.textTertiary)
+                    .foregroundColor(VibeAIColors.textTertiary)
             }
 
             Spacer()
@@ -4205,13 +4205,13 @@ struct SettingsContentView: View {
             HStack {
                 Text(title)
                     .scaledFont(size: 14)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
 
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
                     .scaledFont(size: 12)
-                    .foregroundColor(OmiColors.textTertiary)
+                    .foregroundColor(VibeAIColors.textTertiary)
             }
         }
         .buttonStyle(.plain)
@@ -4220,12 +4220,12 @@ struct SettingsContentView: View {
     private func trackingItem(_ text: String) -> some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(OmiColors.textTertiary.opacity(0.5))
+                .fill(VibeAIColors.textTertiary.opacity(0.5))
                 .frame(width: 4, height: 4)
 
             Text(text)
                 .scaledFont(size: 12)
-                .foregroundColor(OmiColors.textTertiary)
+                .foregroundColor(VibeAIColors.textTertiary)
         }
     }
 
@@ -4237,7 +4237,7 @@ struct SettingsContentView: View {
 
             Text(text)
                 .scaledFont(size: 12)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
         }
     }
 
@@ -4619,14 +4619,14 @@ struct ExcludedAppRow: View {
 
             Text(appName)
                 .scaledFont(size: 14)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
 
             Spacer()
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
                     .scaledFont(size: 16)
-                    .foregroundColor(isHovered ? OmiColors.error : OmiColors.textTertiary)
+                    .foregroundColor(isHovered ? VibeAIColors.error : VibeAIColors.textTertiary)
             }
             .buttonStyle(.plain)
         }
@@ -4634,7 +4634,7 @@ struct ExcludedAppRow: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? OmiColors.backgroundQuaternary.opacity(0.5) : Color.clear)
+                .fill(isHovered ? VibeAIColors.backgroundQuaternary.opacity(0.5) : Color.clear)
         )
         .onHover { hovering in
             isHovered = hovering
@@ -4656,7 +4656,7 @@ struct AddExcludedAppView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add App to Exclusion List")
                 .scaledFont(size: 13, weight: .medium)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
 
             HStack(spacing: 8) {
                 TextField("App name (e.g., Passwords)", text: $newAppName)
@@ -4677,7 +4677,7 @@ struct AddExcludedAppView: View {
                 HStack {
                     Text("Currently Running Apps")
                         .scaledFont(size: 12, weight: .medium)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     Spacer()
 
@@ -4686,7 +4686,7 @@ struct AddExcludedAppView: View {
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .scaledFont(size: 11)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -4740,7 +4740,7 @@ struct AddAllowedAppView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add App to Allowed List")
                 .scaledFont(size: 13, weight: .medium)
-                .foregroundColor(OmiColors.textSecondary)
+                .foregroundColor(VibeAIColors.textSecondary)
 
             HStack(spacing: 8) {
                 TextField("App name (e.g., Mail)", text: $newAppName)
@@ -4761,7 +4761,7 @@ struct AddAllowedAppView: View {
                 HStack {
                     Text("Currently Running Apps")
                         .scaledFont(size: 12, weight: .medium)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
 
                     Spacer()
 
@@ -4770,7 +4770,7 @@ struct AddAllowedAppView: View {
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .scaledFont(size: 11)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                     .buttonStyle(.plain)
                 }
@@ -4834,7 +4834,7 @@ struct BrowserKeywordListView: View {
             HStack(spacing: 8) {
                 Image(systemName: "line.3.horizontal.decrease")
                     .scaledFont(size: 11)
-                    .foregroundColor(OmiColors.textTertiary)
+                    .foregroundColor(VibeAIColors.textTertiary)
                 TextField("Filter keywords...", text: $filterText)
                     .textFieldStyle(.plain)
                     .scaledFont(size: 12)
@@ -4844,14 +4844,14 @@ struct BrowserKeywordListView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .scaledFont(size: 11)
-                            .foregroundColor(OmiColors.textTertiary)
+                            .foregroundColor(VibeAIColors.textTertiary)
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(OmiColors.backgroundTertiary)
+            .background(VibeAIColors.backgroundTertiary)
             .cornerRadius(6)
 
             // Keyword chips in a wrapping flow layout
@@ -4861,19 +4861,19 @@ struct BrowserKeywordListView: View {
                         HStack(spacing: 4) {
                             Text(keyword)
                                 .scaledFont(size: 12)
-                                .foregroundColor(OmiColors.textPrimary)
+                                .foregroundColor(VibeAIColors.textPrimary)
                             Button {
                                 onRemove(keyword)
                             } label: {
                                 Image(systemName: "xmark")
                                     .scaledFont(size: 8, weight: .bold)
-                                    .foregroundColor(OmiColors.textTertiary)
+                                    .foregroundColor(VibeAIColors.textTertiary)
                             }
                             .buttonStyle(.plain)
                         }
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(OmiColors.backgroundTertiary)
+                        .background(VibeAIColors.backgroundTertiary)
                         .cornerRadius(6)
                     }
                 }
@@ -4896,7 +4896,7 @@ struct BrowserKeywordListView: View {
 
             Text("\(keywords.count) keywords")
                 .scaledFont(size: 11)
-                .foregroundColor(OmiColors.textTertiary)
+                .foregroundColor(VibeAIColors.textTertiary)
         }
     }
 
@@ -4924,17 +4924,17 @@ struct RunningAppChip: View {
 
                 Text(appName)
                     .scaledFont(size: 12)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
 
                 Image(systemName: "plus.circle.fill")
                     .scaledFont(size: 12)
-                    .foregroundColor(isHovered ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                    .foregroundColor(isHovered ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isHovered ? OmiColors.backgroundQuaternary : OmiColors.backgroundTertiary.opacity(0.5))
+                    .fill(isHovered ? VibeAIColors.backgroundQuaternary : VibeAIColors.backgroundTertiary.opacity(0.5))
             )
         }
         .buttonStyle(.plain)

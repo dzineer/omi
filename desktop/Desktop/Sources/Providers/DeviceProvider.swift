@@ -74,7 +74,7 @@ final class DeviceProvider: ObservableObject {
     private var disconnectNotificationTimer: Timer?
     private var hasLowBatteryAlerted = false
 
-    private let logger = Logger(subsystem: "me.omi.desktop", category: "DeviceProvider")
+    private let logger = Logger(subsystem: "com.vibeaiglobal.vibeai", category: "DeviceProvider")
     private let connectionCheckInterval: TimeInterval = 15.0
 
     // MARK: - UserDefaults Keys
@@ -432,7 +432,7 @@ final class DeviceProvider: ObservableObject {
         // Send low battery notification
         let content = UNMutableNotificationContent()
         content.title = "Low Battery Alert"
-        content.body = "Your Omi device is running low on battery. Time for a recharge! 🔋"
+        content.body = "Your device is running low on battery. Time for a recharge!"
         content.sound = .default
 
         let request = UNNotificationRequest(
@@ -534,8 +534,8 @@ final class DeviceProvider: ObservableObject {
 
     private func sendDisconnectNotification() {
         let content = UNMutableNotificationContent()
-        content.title = "Your Omi Device Disconnected"
-        content.body = "Please reconnect to continue using your Omi."
+        content.title = "Your Device Disconnected"
+        content.body = "Please reconnect to continue using VibeAi."
         content.sound = .default
 
         let request = UNNotificationRequest(
@@ -693,7 +693,7 @@ extension DeviceProvider: DeviceConnectionDelegate {
             // Send fall detection notification
             let content = UNMutableNotificationContent()
             content.title = "Fall Detected"
-            content.body = "A potential fall was detected by your Omi device."
+            content.body = "A potential fall was detected by your device."
             content.sound = .default
 
             let request = UNNotificationRequest(

@@ -116,7 +116,7 @@ struct AIResponseView: View {
 
             Spacer()
 
-            // modelPicker — moved to Settings > Ask Omi Floating Bar
+            // modelPicker — moved to Settings > Ask VibeAi Floating Bar
         }
     }
 

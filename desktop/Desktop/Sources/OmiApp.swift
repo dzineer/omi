@@ -1,6 +1,5 @@
 import SwiftUI
 import FirebaseCore
-import FirebaseAuth
 import Mixpanel
 import Sentry
 import Sparkle
@@ -15,7 +14,7 @@ enum LaunchMode: String {
         // Check for --mode=rewind argument
         for arg in CommandLine.arguments {
             if arg == "--mode=rewind" {
-                NSLog("OMI LaunchMode: Detected rewind mode from command line")
+                NSLog("VIBEAI LaunchMode: Detected rewind mode from command line")
                 return .rewind
             }
         }
@@ -53,7 +52,7 @@ class AuthState: ObservableObject {
         self.userEmail = savedEmail
         // Show loading splash while Firebase restores session (only if user was previously signed in)
         self.isRestoringAuth = savedSignedIn
-        NSLog("OMI AuthState: Initialized with savedSignedIn=%@, email=%@, isRestoringAuth=%@",
+        NSLog("VIBEAI AuthState: Initialized with savedSignedIn=%@, email=%@, isRestoringAuth=%@",
               savedSignedIn ? "true" : "false", savedEmail ?? "nil", self.isRestoringAuth ? "true" : "false")
     }
 
@@ -69,7 +68,7 @@ class AuthState: ObservableObject {
 }
 
 @main
-struct OMIApp: App {
+struct VibeAIApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @StateObject private var authState = AuthState.shared
@@ -81,8 +80,8 @@ struct OMIApp: App {
     /// Window title with version number (different for rewind mode)
     private var windowTitle: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-        let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Omi"
-        let baseName = Self.launchMode == .rewind ? "Omi Rewind" : displayName
+        let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "VibeAi"
+        let baseName = Self.launchMode == .rewind ? "Vibe AI Rewind" : displayName
         return version.isEmpty ? baseName : "\(baseName) v\(version)"
     }
 
@@ -97,7 +96,7 @@ struct OMIApp: App {
             DesktopHomeView()
                 .withFontScaling()
                 .onAppear {
-                    log("OmiApp: Main window content appeared (mode: \(Self.launchMode.rawValue))")
+                    log("VibeAIApp: Main window content appeared (mode: \(Self.launchMode.rawValue))")
                 }
         }
         .windowStyle(.titleBar)
@@ -154,7 +153,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // "An error occurred while running the updater."
         stripProvenanceXattrs()
 
-        log("AppDelegate: applicationDidFinishLaunching started (mode: \(OMIApp.launchMode.rawValue))")
+        log("AppDelegate: applicationDidFinishLaunching started (mode: \(VibeAIApp.launchMode.rawValue))")
         log("AppDelegate: AuthState.isSignedIn=\(AuthState.shared.isSignedIn)")
 
         // Force macOS to use the correct app icon (bypasses icon cache)
@@ -162,13 +161,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Do NOT call NSWorkspace.setIcon(forFile:) — it writes a resource fork onto
         // the .app bundle, which breaks the code signature and prevents Sparkle
         // auto-updates from working ("An error occurred while running the updater").
-        if let iconURL = Bundle.main.url(forResource: "OmiIcon", withExtension: "icns"),
+        if let iconURL = Bundle.main.url(forResource: "VibeAIIcon", withExtension: "icns"),
            let icon = NSImage(contentsOf: iconURL) {
             NSApp.applicationIconImage = icon
             if let cfURL = Bundle.main.bundleURL as CFURL? {
                 LSRegisterURL(cfURL, true)
             }
-            log("AppDelegate: Set application icon from OmiIcon.icns")
+            log("AppDelegate: Set application icon from VibeAIIcon.icns")
         }
 
         // One-time icon cache reset: forces macOS to pick up the new squircle icon.
@@ -215,7 +214,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 // fails (network blip, expired token mid-refresh). The user is still signed in per
                 // UserDefaults; the 30s refresh timer will retry. Not actionable as a Sentry error.
                 if let exceptions = event.exceptions, exceptions.contains(where: { exc in
-                    exc.type == "Omi_Computer.AuthError" && exc.value.contains("notSignedIn")
+                    exc.type == "Vibe_AI.AuthError" && exc.value.contains("notSignedIn")
                 }) {
                     return nil
                 }
@@ -224,14 +223,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         log("Sentry initialized (environment: \(isDev ? "development" : "production"))")
 
-        // Initialize Firebase
-        let plistPath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist")
+        // Initialize Firebase (skip when using local auth provider)
+        // Check both process env and bundle .env file (AppState.loadEnvironment() hasn't run yet)
+        let isLocalAuth: Bool = {
+            if let cString = getenv("AUTH_PROVIDER"),
+               let val = String(validatingUTF8: cString)?.lowercased(), val == "local" {
+                return true
+            }
+            if let envPath = Bundle.main.path(forResource: ".env", ofType: nil),
+               let contents = try? String(contentsOfFile: envPath, encoding: .utf8) {
+                for line in contents.components(separatedBy: .newlines) {
+                    let parts = line.split(separator: "=", maxSplits: 1)
+                    if parts.count == 2,
+                       String(parts[0]).trimmingCharacters(in: .whitespaces) == "AUTH_PROVIDER",
+                       String(parts[1]).trimmingCharacters(in: .whitespaces).trimmingCharacters(in: CharacterSet(charactersIn: "\"'")).lowercased() == "local" {
+                        return true
+                    }
+                }
+            }
+            return false
+        }()
 
-        if let path = plistPath,
-           let options = FirebaseOptions(contentsOfFile: path) {
+        if !isLocalAuth,
+           let plistPath = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+           let options = FirebaseOptions(contentsOfFile: plistPath) {
             FirebaseApp.configure(options: options)
-            AuthService.shared.configure()
         }
+
+        // Always configure AuthService (auto-detects provider)
+        AuthService.shared.configure()
 
         // Initialize analytics (MixPanel + PostHog)
         AnalyticsManager.shared.initialize()
@@ -298,7 +318,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // One-time migration: Enable launch at login for existing users who haven't set it
         migrateLaunchAtLoginDefault()
 
-        // One-time migration: Rename app bundle from "Omi Computer.app" to "Omi Beta.app"
+        // One-time migration: Rename app bundle from "Omi Computer.app" to "Vibe AI.app"
         migrateAppNameToBeta()
 
         // Track launch at login status once per app launch
@@ -362,11 +382,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             log("AppDelegate: Checking windows after 0.2s delay, count=\(NSApp.windows.count)")
             NSApp.activate(ignoringOtherApps: true)
-            var foundOmiWindow = false
+            var foundVibeAIWindow = false
             for window in NSApp.windows {
                 log("AppDelegate: Window title='\(window.title)', isVisible=\(window.isVisible)")
-                if window.title.hasPrefix("Omi") {
-                    foundOmiWindow = true
+                if window.title.hasPrefix("Vibe AI") {
+                    foundVibeAIWindow = true
                     window.makeKeyAndOrderFront(nil)
                     window.appearance = NSAppearance(named: .darkAqua)
                     // Ensure fullscreen always creates a dedicated Space
@@ -374,8 +394,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     log("AppDelegate: Main window shown on launch")
                 }
             }
-            if !foundOmiWindow {
-                log("AppDelegate: WARNING - 'Omi' window not found!")
+            if !foundVibeAIWindow {
+                log("AppDelegate: WARNING - 'VibeAi' window not found!")
             }
         }
 
@@ -506,7 +526,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     NSApp.activate(ignoringOtherApps: true)
                     // Find and show main window
                     for window in NSApp.windows {
-                        if window.title.hasPrefix("Omi") {
+                        if window.title.hasPrefix("Vibe AI") {
                             window.makeKeyAndOrderFront(nil)
                             break
                         }
@@ -519,7 +539,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return event
         }
 
-        // Ask Omi shortcut is registered via Carbon RegisterEventHotKey in
+        // Ask VibeAi shortcut is registered via Carbon RegisterEventHotKey in
         // GlobalShortcutManager (works regardless of accessibility permission state).
 
         // Global monitor - for when OTHER apps are focused (Ctrl+Option+R only)
@@ -533,7 +553,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         log("AppDelegate: Hotkey monitors registered - global=\(globalHotkeyMonitor != nil), local=\(localHotkeyMonitor != nil)")
-        log("AppDelegate: Hotkey is Ctrl+Option+R (⌃⌥R), Ask Omi + Cmd+\\ via Carbon hotkeys")
+        log("AppDelegate: Hotkey is Ctrl+Option+R (⌃⌥R), Ask VibeAi + Cmd+\\ via Carbon hotkeys")
     }
 
     // Dock icon is always visible — LSUIElement=false and activation policy stays .regular
@@ -552,8 +572,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.isVisible = true
         // Re-apply the icon to force the system to redraw
         if let button = item.button {
-            if OMIApp.launchMode == .rewind {
-                if let icon = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Omi Rewind") {
+            if VibeAIApp.launchMode == .rewind {
+                if let icon = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Vibe AI Rewind") {
                     icon.isTemplate = true
                     button.image = icon
                 }
@@ -604,13 +624,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         log("AppDelegate: [MENUBAR] NSStatusItem created successfully")
 
-        let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "Omi"
+        let displayName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? "VibeAi"
 
         // Set up the button with icon — use "omi" text logo (not a circle)
         if let button = statusBarItem.button {
-            if OMIApp.launchMode == .rewind {
+            if VibeAIApp.launchMode == .rewind {
                 // Rewind mode uses SF Symbol
-                if let icon = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Omi Rewind") {
+                if let icon = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: "Vibe AI Rewind") {
                     icon.isTemplate = true
                     button.image = icon
                     log("AppDelegate: [MENUBAR] Rewind icon set successfully")
@@ -623,16 +643,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 icon.size = NSSize(width: 16 * aspect, height: 16)
                 button.image = icon
                 button.imagePosition = .imageOnly
-                log("AppDelegate: [MENUBAR] Omi text logo set successfully (size: \(icon.size))")
+                log("AppDelegate: [MENUBAR] Text logo set successfully (size: \(icon.size))")
             } else {
                 // Fallback to SF Symbol
-                if let icon = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Omi") {
+                if let icon = NSImage(systemSymbolName: "waveform", accessibilityDescription: "VibeAi") {
                     icon.isTemplate = true
                     button.image = icon
                 }
                 log("AppDelegate: [MENUBAR] WARNING - Failed to load omi_text_logo, using fallback")
             }
-            button.toolTip = OMIApp.launchMode == .rewind ? "Omi Rewind" : displayName
+            button.toolTip = VibeAIApp.launchMode == .rewind ? "Vibe AI Rewind" : displayName
         } else {
             log("AppDelegate: [MENUBAR] WARNING - statusBarItem.button is nil")
         }
@@ -664,7 +684,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(NSMenuItem.separator())
 
         // Open app item
-        let openItem = NSMenuItem(title: "Open \(displayName)", action: #selector(openOmiFromMenu), keyEquivalent: "o")
+        let openItem = NSMenuItem(title: "Open \(displayName)", action: #selector(openVibeAIFromMenu), keyEquivalent: "o")
         openItem.target = self
         menu.addItem(openItem)
 
@@ -726,12 +746,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    @MainActor @objc private func openOmiFromMenu() {
+    @MainActor @objc private func openVibeAIFromMenu() {
         AnalyticsManager.shared.menuBarActionClicked(action: "open_omi")
         NSApp.activate(ignoringOtherApps: true)
         var foundWindow = false
         for window in NSApp.windows {
-            if window.title.hasPrefix("Omi") {
+            if window.title.hasPrefix("Vibe AI") {
                 foundWindow = true
                 window.makeKeyAndOrderFront(nil)
                 window.appearance = NSAppearance(named: .darkAqua)
@@ -740,7 +760,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // Dock icon is always visible; just activate the app
         NSApp.activate(ignoringOtherApps: true)
         if !foundWindow {
-            log("AppDelegate: [MENUBAR] WARNING - No Omi window found when opening from menu bar")
+            log("AppDelegate: [MENUBAR] WARNING - No VibeAi window found when opening from menu bar")
         }
     }
 
@@ -877,14 +897,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        // Always try to show the main Omi window when dock icon is clicked
-        for window in sender.windows where window.title.hasPrefix("Omi") {
+        // Always try to show the main VibeAi window when dock icon is clicked
+        for window in sender.windows where window.title.hasPrefix("Vibe AI") {
             if window.isMiniaturized {
                 window.deminiaturize(nil)
             }
             window.makeKeyAndOrderFront(nil)
             sender.activate(ignoringOtherApps: true)
-            log("AppDelegate: Restored Omi window from dock click (wasVisible=\(flag))")
+            log("AppDelegate: Restored VibeAi window from dock click (wasVisible=\(flag))")
             return false
         }
         return true
@@ -945,7 +965,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
 
-        NSLog("OMI AppDelegate: Received URL event: %@", urlString)
+        NSLog("VIBEAI AppDelegate: Received URL event: %@", urlString)
 
         Task { @MainActor in
             AuthService.shared.handleOAuthCallback(url: url)
@@ -992,14 +1012,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func migrateAppNameToBeta() {
         let currentPath = Bundle.main.bundlePath
 
-        // Case 1: Running as "Omi Computer.app" — rename self to "Omi Beta.app"
+        // Case 1: Running as "Omi Computer.app" — rename self to "Vibe AI.app"
         if currentPath.hasSuffix("Omi Computer.app") {
             let key = "didMigrateAppNameToBetaV1"
             guard !UserDefaults.standard.bool(forKey: key) else { return }
             UserDefaults.standard.set(true, forKey: key)
 
             let dir = (currentPath as NSString).deletingLastPathComponent
-            let newPath = dir + "/Omi Beta.app"
+            let newPath = dir + "/Vibe AI.app"
             guard !FileManager.default.fileExists(atPath: newPath) else { return }
 
             do {
@@ -1031,7 +1051,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
 
-        // Case 2: Running as "Omi Beta.app" — kill and delete old "Omi Computer.app" if it exists
+        // Case 2: Running as "Vibe AI.app" — kill and delete old "Omi Computer.app" if it exists
         cleanupOldOmiComputerApp()
     }
 

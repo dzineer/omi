@@ -3,7 +3,7 @@ import Foundation
 actor APIClient {
     static let shared = APIClient()
 
-    // OMI Backend base URL - loaded from .env file (OMI_API_URL)
+    // VibeAi Backend base URL - loaded from .env file (OMI_API_URL)
     // Production URL is set in .env.app, dev URL is set by run.sh
     var baseURL: String {
         // First check getenv() for values set by setenv() in loadEnvironment()
@@ -4403,9 +4403,9 @@ extension APIClient {
     func fetchTotalOmiAICost() async -> Double? {
         struct Res: Decodable { let total_cost_usd: Double }
         do {
-            log("APIClient: Fetching total Omi AI cost from backend")
+            log("APIClient: Fetching total VibeAi cost from backend")
             let res: Res = try await get("v1/users/me/llm-usage/total")
-            log("APIClient: Total Omi AI cost from backend: $\(String(format: "%.4f", res.total_cost_usd))")
+            log("APIClient: Total VibeAi cost from backend: $\(String(format: "%.4f", res.total_cost_usd))")
             return res.total_cost_usd
         } catch {
             log("APIClient: LLM total cost fetch failed: \(error.localizedDescription)")

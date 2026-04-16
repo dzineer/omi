@@ -339,7 +339,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
 
     // MARK: - Bridge (supports ACP or Claude Code engine)
     // NOTE: initialized lazily so it reads the persisted bridgeMode from UserDefaults,
-    // not always defaulting to Vibe AI mode on cold start.
+    // not always defaulting to VibeAi mode on cold start.
     private lazy var acpBridge: ACPBridge = {
         let isOmi = (UserDefaults.standard.string(forKey: "chatBridgeMode") ?? BridgeMode.omiAI.rawValue) != BridgeMode.userClaude.rawValue
         return ACPBridge(passApiKey: isOmi)
@@ -373,12 +373,12 @@ A screenshot may be attached — use it silently only if relevant. Never mention
     @Published var claudeAuthUrl: String?
     /// Whether the user has a cached Claude OAuth token
     @Published var isClaudeConnected = false
-    /// Cumulative tokens used in the current session via Vibe AI account
+    /// Cumulative tokens used in the current session via VibeAi account
     @Published var sessionTokensUsed: Int = 0
-    /// Cumulative USD cost spent using the Vibe AI account, persisted across sessions.
+    /// Cumulative USD cost spent using the VibeAi account, persisted across sessions.
     /// Used to enforce the $50 threshold for auto-switching to the user's Claude account.
     @AppStorage("omiAICumulativeCostUsd") var omiAICumulativeCostUsd: Double = 0.0
-    /// Set to true when the $50 Vibe AI account usage threshold is reached, triggering an alert.
+    /// Set to true when the $50 VibeAi account usage threshold is reached, triggering an alert.
     @Published var showOmiThresholdAlert = false
 
     private let messagesPageSize = 50
@@ -617,7 +617,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         }
     }
 
-    /// Switch between bridge modes (Vibe AI vs user's Claude account)
+    /// Switch between bridge modes (VibeAi vs user's Claude account)
     func switchBridgeMode(to mode: BridgeMode) async {
         // Compare against the actual running bridge state, not bridgeMode (@AppStorage updates
         // immediately when the Picker changes, so bridgeMode already equals `mode` by the time
@@ -729,7 +729,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
         // 4. Update state
         isClaudeConnected = false
 
-        // 5. Switch back to Vibe AI mode and recreate bridge with API key
+        // 5. Switch back to VibeAi mode and recreate bridge with API key
         bridgeMode = BridgeMode.omiAI.rawValue
         acpBridge = ACPBridge(passApiKey: true)
         claudeCodeBridge = ClaudeCodeBridge(passApiKey: true)
@@ -1395,17 +1395,17 @@ A screenshot may be attached — use it silently only if relevant. Never mention
 
     /// Initialize chat: fetch sessions and load messages
     func initialize() async {
-        // Seed cumulative Vibe AI cost from backend now that auth is ready (background, no latency)
+        // Seed cumulative VibeAi cost from backend now that auth is ready (background, no latency)
         Task.detached(priority: .background) { [weak self] in
             guard let serverCost = await APIClient.shared.fetchTotalOmiAICost() else { return }
             guard let self else { return }
             await MainActor.run {
                 // Always trust the server value — it's the authoritative total
                 self.omiAICumulativeCostUsd = serverCost
-                log("ChatProvider: Seeded Vibe AI cumulative cost from backend: $\(String(format: "%.4f", serverCost))")
+                log("ChatProvider: Seeded VibeAi cumulative cost from backend: $\(String(format: "%.4f", serverCost))")
                 // Auto-switch if already over threshold on startup
                 if self.bridgeMode == BridgeMode.omiAI.rawValue && serverCost >= 50.0 {
-                    log("ChatProvider: Vibe AI cost already at $\(String(format: "%.2f", serverCost)) on startup — switching to user Claude account")
+                    log("ChatProvider: VibeAi cost already at $\(String(format: "%.2f", serverCost)) on startup — switching to user Claude account")
                     self.showOmiThresholdAlert = true
                     Task { await self.switchBridgeMode(to: .userClaude) }
                 }
@@ -1838,7 +1838,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
             return
         }
 
-        // Guard: Block query if Vibe AI account $50 usage threshold already reached
+        // Guard: Block query if VibeAi account $50 usage threshold already reached
         if bridgeMode == BridgeMode.omiAI.rawValue && omiAICumulativeCostUsd >= 50.0 {
             showOmiThresholdAlert = true
             Task { await self.switchBridgeMode(to: .userClaude) }
@@ -2118,7 +2118,7 @@ A screenshot may be attached — use it silently only if relevant. Never mention
                         costUsd: r.costUsd
                     )
                 }
-                // Auto-switch to the user's Claude account when the $50 Vibe AI usage threshold is reached
+                // Auto-switch to the user's Claude account when the $50 VibeAi usage threshold is reached
                 if omiAICumulativeCostUsd >= 50.0 {
                     showOmiThresholdAlert = true
                     Task { await self.switchBridgeMode(to: .userClaude) }

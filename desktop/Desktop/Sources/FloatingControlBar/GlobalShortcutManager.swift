@@ -32,7 +32,7 @@ class GlobalShortcutManager {
             1, &eventType, nil, nil
         )
 
-        // Re-register Ask Omi shortcut when user changes it in settings
+        // Re-register Ask VibeAi shortcut when user changes it in settings
         shortcutObserver = NotificationCenter.default.addObserver(
             forName: ShortcutSettings.askOmiShortcutChanged,
             object: nil,
@@ -46,18 +46,18 @@ class GlobalShortcutManager {
         unregisterShortcuts()
         // Register Cmd+\ for toggle bar (keycode 42 = backslash)
         registerHotKey(keyCode: 42, modifiers: Int(cmdKey), id: .toggleBar)
-        // Register Ask Omi shortcut from user settings
+        // Register Ask VibeAi shortcut from user settings
         registerAskOmi()
     }
 
     private func registerAskOmi() {
-        // Unregister previous Ask Omi hotkey if any
+        // Unregister previous Ask VibeAi hotkey if any
         if let ref = hotKeyRefs.removeValue(forKey: .askOmi) {
             UnregisterEventHotKey(ref)
         }
         let askOmiKey = MainActor.assumeIsolated { ShortcutSettings.shared.askOmiKey }
         registerHotKey(keyCode: Int(askOmiKey.keyCode), modifiers: askOmiKey.carbonModifiers, id: .askOmi)
-        NSLog("GlobalShortcutManager: Registered Ask Omi shortcut: \(askOmiKey.rawValue)")
+        NSLog("GlobalShortcutManager: Registered Ask VibeAi shortcut: \(askOmiKey.rawValue)")
     }
 
     private func registerHotKey(keyCode: Int, modifiers: Int, id: HotKeyID) {
@@ -97,7 +97,7 @@ class GlobalShortcutManager {
             NSLog("GlobalShortcutManager: Cmd+\\ detected, toggling floating bar")
             NotificationCenter.default.post(name: GlobalShortcutManager.toggleFloatingBarNotification, object: nil)
         case .askOmi:
-            NSLog("GlobalShortcutManager: Ask Omi shortcut detected")
+            NSLog("GlobalShortcutManager: Ask VibeAi shortcut detected")
             DispatchQueue.main.async {
                 FloatingControlBarManager.shared.openAIInput()
             }

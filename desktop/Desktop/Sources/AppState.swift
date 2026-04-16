@@ -121,7 +121,7 @@ class AppState: ObservableObject {
         return hasCompletedOnboarding && !hasNotificationPermission
     }
 
-    /// Open notification preferences in System Settings (directly to Vibe AI's settings)
+    /// Open notification preferences in System Settings (directly to VibeAi's settings)
     func openNotificationPreferences() {
         let bundleId = Bundle.main.bundleIdentifier ?? "com.vibeaiglobal.vibeai"
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications?id=\(bundleId)") {
@@ -2603,7 +2603,7 @@ class AppState: ObservableObject {
             // 1. Clean conflicting app bundles from Trash, DerivedData, DMG staging
             cleanConflictingAppBundles()
 
-            // 2. Eject any mounted Vibe AI DMG volumes
+            // 2. Eject any mounted VibeAi DMG volumes
             ejectMountedDMGVolumes()
 
             // 3. Reset Launch Services database to clear stale registrations
@@ -2645,7 +2645,7 @@ class AppState: ObservableObject {
         let fileManager = FileManager.default
         let homeDir = fileManager.homeDirectoryForCurrentUser.path
 
-        // Clean Vibe AI apps from Trash (they still pollute Launch Services!)
+        // Clean VibeAi apps from Trash (they still pollute Launch Services!)
         let trashPath = "\(homeDir)/.Trash"
         if let contents = try? fileManager.contentsOfDirectory(atPath: trashPath) {
             for item in contents where item.lowercased().contains("omi") || item.lowercased().contains("vibe ai") {
@@ -2673,18 +2673,17 @@ class AppState: ObservableObject {
             }
         }
 
-        // Clean Xcode DerivedData Vibe AI builds
+        // Clean Xcode DerivedData VibeAi builds
         let derivedDataPath = "\(homeDir)/Library/Developer/Xcode/DerivedData"
         if let contents = try? fileManager.contentsOfDirectory(atPath: derivedDataPath) {
             for item in contents where item.lowercased().contains("omi") || item.lowercased().contains("vibe") {
                 let buildProductsPath = "\(derivedDataPath)/\(item)/Build/Products"
                 if let buildDirs = try? fileManager.contentsOfDirectory(atPath: buildProductsPath) {
                     for buildDir in buildDirs {
-                        let appPath = "\(buildProductsPath)/\(buildDir)/Vibe AI.app"
+                        let appPath = "\(buildProductsPath)/\(buildDir)/VibeAi.app"
                         let appPath2 = "\(buildProductsPath)/\(buildDir)/Vibe AI.app"
-                        let appPath3 = "\(buildProductsPath)/\(buildDir)/Vibe AI.app"
-                        let appPath4 = "\(buildProductsPath)/\(buildDir)/Vibe AI Dev.app"
-                        for path in [appPath, appPath2, appPath3, appPath4] {
+                        let appPath3 = "\(buildProductsPath)/\(buildDir)/Vibe AI Dev.app"
+                        for path in [appPath, appPath2, appPath3] {
                             if fileManager.fileExists(atPath: path) {
                                 do {
                                     try fileManager.removeItem(atPath: path)
@@ -2700,7 +2699,7 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Eject any mounted Vibe AI DMG volumes
+    /// Eject any mounted VibeAi DMG volumes
     private nonisolated func ejectMountedDMGVolumes() {
         let fileManager = FileManager.default
         let volumesPath = "/Volumes"
@@ -2757,7 +2756,7 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Clean user TCC database entries for Vibe AI apps
+    /// Clean user TCC database entries for VibeAi apps
     private nonisolated func cleanUserTCCDatabase() {
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
         let tccDbPath = "\(homeDir)/Library/Application Support/com.apple.TCC/TCC.db"
@@ -2922,7 +2921,7 @@ extension Notification.Name {
     static let navigateToDeviceSettings = Notification.Name("navigateToDeviceSettings")
     /// Posted to navigate to Task Assistant settings (Developer Settings)
     static let navigateToTaskSettings = Notification.Name("navigateToTaskSettings")
-    /// Posted to navigate to Ask Vibe AI Floating Bar settings
+    /// Posted to navigate to Ask VibeAi Floating Bar settings
     static let navigateToFloatingBarSettings = Notification.Name("navigateToFloatingBarSettings")
     /// Posted to navigate to AI Chat settings
     static let navigateToAIChatSettings = Notification.Name("navigateToAIChatSettings")

@@ -845,17 +845,17 @@ class AnalyticsManager {
         PostHogManager.shared.track("floating_bar_toggled", properties: props)
     }
 
-    /// Track when Ask OMI is opened (AI input panel shown)
+    /// Track when Ask VibeAi is opened (AI input panel shown)
     func floatingBarAskOmiOpened(source: String) {
         let props: [String: Any] = ["source": source]
-        MixpanelManager.shared.track("Floating Bar Ask OMI Opened", properties: props.compactMapValues { $0 as? MixpanelType })
-        PostHogManager.shared.track("floating_bar_ask_omi_opened", properties: props)
+        MixpanelManager.shared.track("Floating Bar Ask VibeAi Opened", properties: props.compactMapValues { $0 as? MixpanelType })
+        PostHogManager.shared.track("floating_bar_ask_vibe_ai_opened", properties: props)
     }
 
     /// Track when the AI conversation is closed
     func floatingBarAskOmiClosed() {
-        MixpanelManager.shared.track("Floating Bar Ask OMI Closed")
-        PostHogManager.shared.track("floating_bar_ask_omi_closed")
+        MixpanelManager.shared.track("Floating Bar Ask VibeAi Closed")
+        PostHogManager.shared.track("floating_bar_ask_vibe_ai_closed")
     }
 
     /// Track when an AI query is sent from the floating bar

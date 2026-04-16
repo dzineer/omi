@@ -6,7 +6,7 @@ struct SignInView: View {
     var body: some View {
         ZStack {
             // Full background
-            OmiColors.backgroundPrimary
+            VibeAIColors.backgroundPrimary
                 .ignoresSafeArea()
 
             // Centered sign in card
@@ -15,7 +15,7 @@ struct SignInView: View {
 
                 // Logo/Title
                 VStack(spacing: 16) {
-                    // Omi logo
+                    // VibeAi logo
                     if let logoImage = NSImage(contentsOf: Bundle.resourceBundle.url(forResource: "herologo", withExtension: "png")!) {
                         Image(nsImage: logoImage)
                             .resizable()
@@ -23,13 +23,13 @@ struct SignInView: View {
                             .frame(width: 64, height: 64)
                     }
 
-                    Text("Omi")
+                    Text("VibeAi")
                         .scaledFont(size: 48, weight: .bold)
-                        .foregroundColor(OmiColors.textPrimary)
+                        .foregroundColor(VibeAIColors.textPrimary)
 
                     Text("Sign in to continue")
                         .font(.title3)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
 
                 Spacer()
@@ -105,14 +105,14 @@ struct SignInView: View {
                     // Loading overlay for both buttons
                     if authState.isLoading {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: OmiColors.textPrimary))
+                            .progressViewStyle(CircularProgressViewStyle(tint: VibeAIColors.textPrimary))
                             .padding(.top, 8)
                     }
 
                     if let error = authState.error {
                         Text(error)
                             .font(.caption)
-                            .foregroundColor(OmiColors.error)
+                            .foregroundColor(VibeAIColors.error)
                             .multilineTextAlignment(.center)
                             .padding(.top, 4)
                     }

@@ -20,7 +20,7 @@ struct AskAIInputView: View {
             HStack {
                 Spacer()
 
-                // modelPicker — moved to Settings > Ask Omi Floating Bar
+                // modelPicker — moved to Settings > Ask VibeAi Floating Bar
 
                 HStack(spacing: 4) {
                     Text("esc")
@@ -47,7 +47,7 @@ struct AskAIInputView: View {
                             .padding(.vertical, 8)
                     }
 
-                    OmiTextEditor(
+                    VibeAITextEditor(
                         text: $localInput,
                         lineFragmentPadding: 8,
                         onSubmit: {
@@ -99,7 +99,7 @@ struct AskAIInputView: View {
         }
     }
 
-    // Model picker moved to Settings > Ask Omi Floating Bar
+    // Model picker moved to Settings > Ask VibeAi Floating Bar
     // private var modelPicker: some View { ... }
     // private func showModelMenu() { ... }
     // private var currentModelLabel: String { ... }

@@ -8,7 +8,7 @@ import Foundation
 // Note: We use "resourceBundle" instead of "module" to avoid conflicts with Swift PM's generated accessor
 extension Foundation.Bundle {
     static let resourceBundle: Bundle = {
-        let bundleName = "Omi Computer_Omi Computer"
+        let bundleName = "Vibe AI_Vibe AI"
 
         // For macOS app bundles, look in Contents/Resources/
         let resourcesPath = Bundle.main.bundleURL

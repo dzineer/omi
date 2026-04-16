@@ -23,7 +23,7 @@ struct SettingsSearchItem: Identifiable {
         // General
         SettingsSearchItem(name: "Rewind", subtitle: "Screen capture and audio recording", keywords: ["monitor", "screenshot", "capture", "audio", "recording", "microphone", "speech"], section: .general, advancedSubsection: nil, icon: "gearshape", settingId: "general.rewind"),
         SettingsSearchItem(name: "Notifications", subtitle: "Proactive alerts and status", keywords: ["alerts", "notify"], section: .general, advancedSubsection: nil, icon: "gearshape", settingId: "general.notifications"),
-        SettingsSearchItem(name: "Ask Omi", subtitle: "Show or hide the floating chat bar", keywords: ["floating bar", "chat bar"], section: .general, advancedSubsection: nil, icon: "gearshape", settingId: "general.askomi"),
+        SettingsSearchItem(name: "Ask VibeAi", subtitle: "Show or hide the floating chat bar", keywords: ["floating bar", "chat bar"], section: .general, advancedSubsection: nil, icon: "gearshape", settingId: "general.askomi"),
         SettingsSearchItem(name: "Font Size", subtitle: "Adjust text size across the app", keywords: ["text size", "zoom", "scale", "reset"], section: .general, advancedSubsection: nil, icon: "gearshape", settingId: "general.fontsize"),
         SettingsSearchItem(name: "Reset Window Size", subtitle: "Restore the default window dimensions", keywords: ["resize", "window", "default size"], section: .general, advancedSubsection: nil, icon: "gearshape", settingId: "general.resetwindow"),
 
@@ -62,14 +62,14 @@ struct SettingsSearchItem: Identifiable {
 
         // Privacy
         SettingsSearchItem(name: "Privacy", subtitle: "Control your data and privacy settings", keywords: ["data", "encryption", "cloud sync", "recordings"], section: .privacy, advancedSubsection: nil, icon: "lock.shield", settingId: "privacy.privacy"),
-        SettingsSearchItem(name: "Store Recordings", subtitle: "Allow Omi to store audio recordings of your conversations", keywords: ["store", "save recordings", "audio storage"], section: .privacy, advancedSubsection: nil, icon: "lock.shield", settingId: "privacy.storerecordings"),
+        SettingsSearchItem(name: "Store Recordings", subtitle: "Allow VibeAi to store audio recordings of your conversations", keywords: ["store", "save recordings", "audio storage"], section: .privacy, advancedSubsection: nil, icon: "lock.shield", settingId: "privacy.storerecordings"),
         SettingsSearchItem(name: "Private Cloud Sync", subtitle: "Sync your data securely to your private cloud storage", keywords: ["cloud", "sync", "private cloud"], section: .privacy, advancedSubsection: nil, icon: "lock.shield", settingId: "privacy.cloudsync"),
         SettingsSearchItem(name: "Encryption", subtitle: "Server-side encryption for your data", keywords: ["encrypt", "security", "end to end"], section: .privacy, advancedSubsection: nil, icon: "lock.shield", settingId: "privacy.encryption"),
         SettingsSearchItem(name: "What We Track", subtitle: "View analytics and telemetry data we collect", keywords: ["tracking", "analytics", "telemetry", "data collection"], section: .privacy, advancedSubsection: nil, icon: "lock.shield", settingId: "privacy.tracking"),
 
         // Account
         SettingsSearchItem(name: "Account", subtitle: "Your profile and email", keywords: ["profile", "email"], section: .account, advancedSubsection: nil, icon: "person.circle", settingId: "account.account"),
-        SettingsSearchItem(name: "Sign Out", subtitle: "Sign out of your Omi account", keywords: ["sign out", "log out", "logout", "signout"], section: .account, advancedSubsection: nil, icon: "person.circle", settingId: "account.signout"),
+        SettingsSearchItem(name: "Sign Out", subtitle: "Sign out of your VibeAi account", keywords: ["sign out", "log out", "logout", "signout"], section: .account, advancedSubsection: nil, icon: "person.circle", settingId: "account.signout"),
 
         // AI Chat
         SettingsSearchItem(name: "AI Chat", subtitle: "Configure AI assistant settings", keywords: ["claude", "chat settings"], section: .aiChat, advancedSubsection: nil, icon: "cpu", settingId: "aichat.aichat"),
@@ -87,7 +87,7 @@ struct SettingsSearchItem: Identifiable {
         SettingsSearchItem(name: "Auto-Install Updates", subtitle: "Automatically download and install updates when available", keywords: ["auto install", "automatic install", "download updates", "install updates"], section: .about, advancedSubsection: nil, icon: "info.circle", settingId: "about.autoinstall"),
         SettingsSearchItem(name: "Update Channel", subtitle: "Choose between stable and beta update channels", keywords: ["channel", "beta", "staging", "stable", "release channel"], section: .about, advancedSubsection: nil, icon: "info.circle", settingId: "about.channel"),
         SettingsSearchItem(name: "Version Info", subtitle: "Current app version and build number", keywords: ["version", "build", "app version", "build number"], section: .about, advancedSubsection: nil, icon: "info.circle", settingId: "about.version"),
-        SettingsSearchItem(name: "Report an Issue", subtitle: "Help us improve Omi", keywords: ["bug", "feedback", "report", "issue"], section: .about, advancedSubsection: nil, icon: "info.circle", settingId: "about.reportissue"),
+        SettingsSearchItem(name: "Report an Issue", subtitle: "Help us improve VibeAi", keywords: ["bug", "feedback", "report", "issue"], section: .about, advancedSubsection: nil, icon: "info.circle", settingId: "about.reportissue"),
 
         // Advanced subsections
         SettingsSearchItem(name: "AI User Profile", subtitle: "AI-generated summary of your preferences and habits", keywords: ["profile", "generate", "generate now", "regenerate"], section: .advanced, advancedSubsection: .aiUserProfile, icon: "brain", settingId: "advanced.aiuserprofile"),
@@ -119,18 +119,18 @@ struct SettingsSearchItem: Identifiable {
         SettingsSearchItem(name: "Analysis Throttle", subtitle: "Wait before analyzing after switching apps", keywords: ["delay", "throttle", "app switch"], section: .advanced, advancedSubsection: .analysisThrottle, icon: "clock.arrow.2.circlepath", settingId: "advanced.analysisthrottle"),
         SettingsSearchItem(name: "Goals", subtitle: "Track personal goals with AI-powered progress detection", keywords: ["goal", "target", "objective", "tracking"], section: .advanced, advancedSubsection: .goals, icon: "target", settingId: "advanced.goals"),
         SettingsSearchItem(name: "Auto-Generate Goals", subtitle: "Automatically suggest new goals daily based on your conversations and tasks", keywords: ["auto generate", "suggest goals", "daily goals"], section: .advanced, advancedSubsection: .goals, icon: "target", settingId: "advanced.goals.autogenerate"),
-        SettingsSearchItem(name: "Ask Omi Floating Bar", subtitle: "Configure shortcuts and floating bar behavior", keywords: ["floating bar", "shortcuts", "push to talk"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi"),
-        SettingsSearchItem(name: "AI Model", subtitle: "Choose the AI model for Ask Omi conversations", keywords: ["model", "ai", "sonnet", "opus", "claude"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.model"),
+        SettingsSearchItem(name: "Ask VibeAi Floating Bar", subtitle: "Configure shortcuts and floating bar behavior", keywords: ["floating bar", "shortcuts", "push to talk"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi"),
+        SettingsSearchItem(name: "AI Model", subtitle: "Choose the AI model for Ask VibeAi conversations", keywords: ["model", "ai", "sonnet", "opus", "claude"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.model"),
         SettingsSearchItem(name: "Background Style", subtitle: "Toggle between solid and transparent background", keywords: ["background", "solid", "transparent", "blur"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.background"),
         SettingsSearchItem(name: "Draggable Floating Bar", subtitle: "Allow repositioning the floating bar by dragging it", keywords: ["drag", "move", "reposition", "draggable"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.draggable"),
-        SettingsSearchItem(name: "Ask Omi Shortcut", subtitle: "Global shortcut to open Ask Omi from anywhere", keywords: ["shortcut", "hotkey", "keyboard", "global shortcut"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.shortcut"),
+        SettingsSearchItem(name: "Ask VibeAi Shortcut", subtitle: "Global shortcut to open Ask VibeAi from anywhere", keywords: ["shortcut", "hotkey", "keyboard", "global shortcut"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.shortcut"),
         SettingsSearchItem(name: "Push to Talk", subtitle: "Hold a key to speak, release to send your question to AI", keywords: ["push to talk", "ptt", "hold to talk", "microphone key"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.ptt"),
         SettingsSearchItem(name: "Transcription Mode", subtitle: "Choose how voice input is processed", keywords: ["transcription", "mode", "voice", "dictation"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.transcriptionmode"),
         SettingsSearchItem(name: "Double-tap for Locked Mode", subtitle: "Double-tap the push-to-talk key to keep listening hands-free", keywords: ["double tap", "locked mode", "hands free", "listening"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.doubletap"),
         SettingsSearchItem(name: "Push-to-Talk Sounds", subtitle: "Play audio feedback when starting and ending voice input", keywords: ["sounds", "audio feedback", "ptt sounds"], section: .advanced, advancedSubsection: .askOmiFloatingBar, icon: "sparkles", settingId: "advanced.askomi.pttsounds"),
         SettingsSearchItem(name: "Multiple Chat Sessions", subtitle: "Create separate chat threads", keywords: ["multi chat", "threads"], section: .advanced, advancedSubsection: .preferences, icon: "slider.horizontal.3", settingId: "advanced.preferences.multichat"),
         SettingsSearchItem(name: "Compact Conversations", subtitle: "Toggle between compact and expanded conversation list", keywords: ["conversation view", "list"], section: .advanced, advancedSubsection: .preferences, icon: "slider.horizontal.3", settingId: "advanced.preferences.compact"),
-        SettingsSearchItem(name: "Launch at Login", subtitle: "Start Omi automatically when you log in", keywords: ["startup", "login", "boot"], section: .advanced, advancedSubsection: .preferences, icon: "slider.horizontal.3", settingId: "advanced.preferences.launchatlogin"),
+        SettingsSearchItem(name: "Launch at Login", subtitle: "Start VibeAi automatically when you log in", keywords: ["startup", "login", "boot"], section: .advanced, advancedSubsection: .preferences, icon: "slider.horizontal.3", settingId: "advanced.preferences.launchatlogin"),
         SettingsSearchItem(name: "Report Issue", subtitle: "Send app logs and report a problem", keywords: ["bug", "feedback", "logs", "report"], section: .advanced, advancedSubsection: .troubleshooting, icon: "wrench.and.screwdriver", settingId: "advanced.troubleshooting.reportissue"),
         SettingsSearchItem(name: "Rescan Files", subtitle: "Re-index your files and update your AI profile", keywords: ["index", "reindex", "rescan", "files", "scan", "file indexing", "profile"], section: .advanced, advancedSubsection: .troubleshooting, icon: "wrench.and.screwdriver", settingId: "advanced.troubleshooting.rescanfiles"),
         SettingsSearchItem(name: "Reset Onboarding", subtitle: "Restart setup wizard and reset permissions", keywords: ["setup", "wizard", "permissions", "reset"], section: .advanced, advancedSubsection: .troubleshooting, icon: "wrench.and.screwdriver", settingId: "advanced.troubleshooting.resetonboarding"),
@@ -179,7 +179,7 @@ struct SettingsSidebar: View {
             // Settings title
             Text("Settings")
                 .scaledFont(size: 22, weight: .bold)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
                 .padding(.horizontal, 16)
                 .padding(.bottom, 12)
 
@@ -235,20 +235,20 @@ struct SettingsSidebar: View {
             Spacer()
         }
         .frame(width: expandedWidth)
-        .background(OmiColors.backgroundPrimary)
+        .background(VibeAIColors.backgroundPrimary)
     }
 
     private var searchField: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .scaledFont(size: 13)
-                .foregroundColor(isSearchFocused ? OmiColors.purplePrimary : OmiColors.textTertiary)
+                .foregroundColor(isSearchFocused ? VibeAIColors.purplePrimary : VibeAIColors.textTertiary)
                 .animation(.easeInOut(duration: 0.15), value: isSearchFocused)
 
             TextField("Search settings...", text: $searchQuery)
                 .textFieldStyle(.plain)
                 .scaledFont(size: 13)
-                .foregroundColor(OmiColors.textPrimary)
+                .foregroundColor(VibeAIColors.textPrimary)
                 .focused($isSearchFocused)
 
             if !searchQuery.isEmpty {
@@ -257,7 +257,7 @@ struct SettingsSidebar: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .scaledFont(size: 12)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
                 .buttonStyle(.plain)
             }
@@ -266,10 +266,10 @@ struct SettingsSidebar: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(OmiColors.backgroundTertiary)
+                .fill(VibeAIColors.backgroundTertiary)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
-                        .stroke(isSearchFocused ? OmiColors.purplePrimary.opacity(0.5) : Color.clear, lineWidth: 1)
+                        .stroke(isSearchFocused ? VibeAIColors.purplePrimary.opacity(0.5) : Color.clear, lineWidth: 1)
                 )
         )
     }
@@ -280,7 +280,7 @@ struct SettingsSidebar: View {
                 if filteredSearchItems.isEmpty {
                     Text("No results")
                         .scaledFont(size: 13)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 20)
                 } else {
@@ -311,11 +311,11 @@ struct SettingsSidebar: View {
             HStack(spacing: 8) {
                 Image(systemName: "chevron.left")
                     .scaledFont(size: 14, weight: .semibold)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
 
                 Text("Back")
                     .scaledFont(size: 14, weight: .medium)
-                    .foregroundColor(OmiColors.textSecondary)
+                    .foregroundColor(VibeAIColors.textSecondary)
 
                 Spacer()
             }
@@ -324,7 +324,7 @@ struct SettingsSidebar: View {
             .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isBackHovered ? OmiColors.backgroundTertiary.opacity(0.5) : Color.clear)
+                    .fill(isBackHovered ? VibeAIColors.backgroundTertiary.opacity(0.5) : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -364,12 +364,12 @@ struct SettingsSidebarItem: View {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .scaledFont(size: 17)
-                    .foregroundColor(isSelected ? OmiColors.textPrimary : OmiColors.textTertiary)
+                    .foregroundColor(isSelected ? VibeAIColors.textPrimary : VibeAIColors.textTertiary)
                     .frame(width: iconWidth)
 
                 Text(section.rawValue)
                     .scaledFont(size: 14, weight: isSelected ? .medium : .regular)
-                    .foregroundColor(isSelected ? OmiColors.textPrimary : OmiColors.textSecondary)
+                    .foregroundColor(isSelected ? VibeAIColors.textPrimary : VibeAIColors.textSecondary)
 
                 Spacer()
             }
@@ -379,8 +379,8 @@ struct SettingsSidebarItem: View {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(isSelected
-                          ? OmiColors.backgroundTertiary.opacity(0.8)
-                          : (isHovered ? OmiColors.backgroundTertiary.opacity(0.5) : Color.clear))
+                          ? VibeAIColors.backgroundTertiary.opacity(0.8)
+                          : (isHovered ? VibeAIColors.backgroundTertiary.opacity(0.5) : Color.clear))
             )
         }
         .buttonStyle(.plain)
@@ -408,12 +408,12 @@ struct SettingsSubsectionItem: View {
 
                 Image(systemName: subsection.icon)
                     .scaledFont(size: 14)
-                    .foregroundColor(isSelected ? OmiColors.textPrimary : OmiColors.textTertiary)
+                    .foregroundColor(isSelected ? VibeAIColors.textPrimary : VibeAIColors.textTertiary)
                     .frame(width: 16)
 
                 Text(subsection.rawValue)
                     .scaledFont(size: 13, weight: isSelected ? .medium : .regular)
-                    .foregroundColor(isSelected ? OmiColors.textPrimary : OmiColors.textSecondary)
+                    .foregroundColor(isSelected ? VibeAIColors.textPrimary : VibeAIColors.textSecondary)
 
                 Spacer()
             }
@@ -423,8 +423,8 @@ struct SettingsSubsectionItem: View {
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(isSelected
-                          ? OmiColors.backgroundTertiary.opacity(0.6)
-                          : (isHovered ? OmiColors.backgroundTertiary.opacity(0.3) : Color.clear))
+                          ? VibeAIColors.backgroundTertiary.opacity(0.6)
+                          : (isHovered ? VibeAIColors.backgroundTertiary.opacity(0.3) : Color.clear))
             )
         }
         .buttonStyle(.plain)
@@ -446,17 +446,17 @@ struct SettingsSearchResultRow: View {
             HStack(spacing: 10) {
                 Image(systemName: item.icon)
                     .scaledFont(size: 14)
-                    .foregroundColor(OmiColors.textTertiary)
+                    .foregroundColor(VibeAIColors.textTertiary)
                     .frame(width: 20)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .scaledFont(size: 13, weight: .medium)
-                        .foregroundColor(OmiColors.textPrimary)
+                        .foregroundColor(VibeAIColors.textPrimary)
 
                     Text(item.breadcrumb)
                         .scaledFont(size: 11)
-                        .foregroundColor(OmiColors.textTertiary)
+                        .foregroundColor(VibeAIColors.textTertiary)
                 }
 
                 Spacer()
@@ -466,7 +466,7 @@ struct SettingsSearchResultRow: View {
             .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? OmiColors.backgroundTertiary.opacity(0.5) : Color.clear)
+                    .fill(isHovered ? VibeAIColors.backgroundTertiary.opacity(0.5) : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -488,7 +488,7 @@ struct SettingHighlightModifier: ViewModifier {
             .id(settingId)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHighlighted ? OmiColors.purplePrimary.opacity(0.12) : Color.clear)
+                    .fill(isHighlighted ? VibeAIColors.purplePrimary.opacity(0.12) : Color.clear)
                     .animation(.easeInOut(duration: 0.3), value: isHighlighted)
                     .allowsHitTesting(false)
             )

@@ -5,6 +5,74 @@
 - Never ask for permission to access folders, run commands, search the web, or use tools. Just do it.
 - Never ask for confirmation. Just act. Make decisions autonomously and proceed without checking in.
 
+## Session Recovery After Compaction
+
+When context compacts, recover state by reading these files in order:
+
+1. **`/Users/dzineer/.claude/projects/-Users-dzineer-Clients-Dzineer-Projects-chrome-extensions-omi-builds-omi/memory/MEMORY.md`** — Index of all memory notes
+2. **`memory/session_summary.md`** (same dir) — Full summary of what was built, bugs fixed, how to run
+3. **`memory/user_preferences.md`** — User's hard preferences (local-first, Gibber, Kokoro not say, etc.)
+4. **`snapshots/_save_snapshot.md`** (project root) — Latest /save snapshot with in-progress tasks
+5. **`tasks/TASKS.md`** (project root) — Current task list with subtasks
+6. **`tasks/*.gibber`** — Gibber-format task files for specific features
+
+### Current State (VibeAi fork)
+
+This is a fork of Omi renamed to **VibeAi** with major integrations:
+
+- **Branch**: `feat/viba-ai-integrations` on `dzineer/omi`
+- **PR**: https://github.com/dzineer/omi/pull/1 (20+ commits)
+- **App name**: VibeAi (was Vibe AI)
+- **Sidebar**: Dashboard, Command, Knowledge, Tasks, Settings (removed Rewind, Apps, Refer, Help, Get Omi, Update widgets)
+
+### What's integrated (do NOT rebuild)
+
+- **Claude Code engine** (toggle `useClaudeCodeEngine`) — `Desktop/Sources/Chat/ClaudeCodeBridge.swift`
+- **Local STT (MLX Whisper)** — `Desktop/Sources/Voice/LocalSTTService.swift`, Python server on port 8787
+- **Local TTS (Kokoro)** — `Desktop/Sources/Voice/LocalTTSService.swift`, Python server on port 8788
+- **Voice loop** — `Desktop/Sources/Voice/VoiceConversationManager.swift`, two buttons in ChatPage (mic + speaker)
+- **Speech filter** — `Desktop/Sources/Voice/SpeechTextFilter.swift` strips markdown before TTS
+- **Eidetic Memory** — `Backend-Rust/src/services/memory.rs`, endpoints `/api/memory/{save,query,status,graph}`
+- **Knowledge page** — `Desktop/Sources/MainWindow/Pages/KnowledgePage.swift` (GRAPH ONLY — no flat lists)
+- **VibeAI logo** — `Desktop/Sources/Resources/VibeAI-logo.{svg,png}`
+- **Gibber executor + hooks** — `~/.claude/skills/gibber-executor/`, hooks in `~/.claude/settings.json`
+- **Playwright disabled** in both Swift and acp-bridge JS
+- **Sparkle auto-update disabled** in Info.plist
+
+### Active Priorities (in-progress)
+
+1. **KNOWLEDGE003** — Force-directed knowledge graph (spec: `tasks/knowledge-graph-v2.gibber`)
+   - Current static circle layout is wrong
+   - User wants: physics simulation, drag/zoom/pan, double-click drill-down, NO flat record list
+2. **Screen recording TCC** — ad-hoc signing breaks permission recognition
+3. **Kokoro TTS audible output** — server works via curl, app doesn't play sound
+
+### Running the app
+
+```bash
+cd desktop && bash run.sh
+# run.sh fails at tunnel step — ignore, app still builds
+codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"
+sed -i '' 's|OMI_API_URL=.*|OMI_API_URL=http://localhost:8080|' "/Applications/Vibe AI Dev.app/Contents/Resources/.env"
+open "/Applications/Vibe AI Dev.app"
+
+# If MLX Whisper not auto-starting:
+python3 ~/Library/Application\ Support/VoiceAI/mlx_whisper_server.py &
+
+# If Kokoro TTS not running:
+python3 ~/Library/Application\ Support/VoiceAI/kokoro_tts_server.py &
+```
+
+### User Preferences (CRITICAL — do not forget)
+
+- **Local-first, zero cloud** — user strongly prefers no cloud dependencies
+- **Use Gibber** for task tracking — NOT English markdown (Gibber hooks enforce this)
+- **Kokoro for TTS** — NOT macOS `say` (user was explicit)
+- **Test yourself** before claiming things work — use the `say` command to announce to user when they're away
+- **Knowledge page = graph only** — flat record lists are useless, use force-directed visualization
+- **Double-click to drill down** into node sub-graphs
+- **Push to `fork` remote** (github.com/dzineer/omi) — no access to upstream BasedHardware/omi
+
 ## Setup
 
 ### Install Pre-commit Hook

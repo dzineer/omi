@@ -1,7 +1,61 @@
 # Claude Project Context
 
 ## Project Overview
-OMI Desktop App for macOS (Swift)
+**VibeAi** Desktop App for macOS (Swift + Rust) — forked from Omi with major local-first integrations.
+
+## Session Recovery After Compaction
+
+When context compacts, restore state by reading these files in order:
+
+1. **`/Users/dzineer/.claude/projects/-Users-dzineer-Clients-Dzineer-Projects-chrome-extensions-omi-builds-omi/memory/MEMORY.md`** — memory index
+2. **`memory/session_summary.md`** (in that dir) — full session summary with architecture, bugs fixed, file paths
+3. **`memory/user_preferences.md`** — user's hard preferences (local-first, Gibber, Kokoro not say, graph not lists)
+4. **`../snapshots/_save_snapshot.md`** (monorepo root) — latest /save snapshot
+5. **`../tasks/TASKS.md`** + `../tasks/*.gibber` — current task list and feature specs
+
+### Current State
+- **Branch**: `feat/viba-ai-integrations` on `dzineer/omi` fork
+- **PR**: https://github.com/dzineer/omi/pull/1
+- **App name**: VibeAi (display name)
+- **Sidebar**: Dashboard, Command, Knowledge, Tasks, Settings
+- **Removed**: Rewind, Apps, Refer a Friend, Help from Founder, Get Omi widget, Update widget, Sparkle updates
+
+### Already Built — DO NOT rebuild
+- Claude Code engine (`Desktop/Sources/Chat/ClaudeCodeBridge.swift`) — toggle via `useClaudeCodeEngine`
+- Local STT MLX Whisper (`Desktop/Sources/Voice/LocalSTTService.swift`) — Python server port 8787
+- Local TTS Kokoro (`Desktop/Sources/Voice/LocalTTSService.swift`) — Python server port 8788
+- Voice loop with mic + speaker buttons (`VoiceConversationManager.swift`)
+- SpeechTextFilter strips markdown before TTS
+- Eidetic Memory (`Backend-Rust/src/services/memory.rs`) — local graph at `~/.omi/memory/graph.json`
+- Knowledge page wired to Eidetic (but needs force-directed graph, see priorities)
+- VibeAI logo (`Desktop/Sources/Resources/VibeAI-logo.{svg,png}`)
+- Playwright disabled (Swift + ACP bridge JS)
+- Gibber executor skill + hooks in `~/.claude/settings.json`
+
+### Top Priorities for Next Session
+1. **KNOWLEDGE003** — Force-directed graph (`../tasks/knowledge-graph-v2.gibber`). Current static circles are wrong. Need physics, drag/zoom, double-click drill-down. **Remove flat record list** (user hates it).
+2. Screen recording TCC — ad-hoc signing breaks permission recognition
+3. Kokoro TTS not audible from app (server works via curl, app plays 0 bytes)
+
+### User Preferences (CRITICAL)
+- **Zero cloud dependencies** — local-first always
+- **Use Gibber** for task tracking — NOT English .md files (hooks enforce this)
+- **Kokoro for TTS** — NOT macOS `say` (user was explicit)
+- **Test yourself** — don't ask user to test. Use `say` command to announce results when user is away.
+- **Knowledge page = graph only** — no flat record lists
+- **Push to `fork` remote** (dzineer/omi), not upstream
+
+### Run Commands
+```bash
+bash run.sh   # build + install (tunnel error is harmless)
+codesign --force --deep --sign - "/Applications/Vibe AI Dev.app"
+sed -i '' 's|OMI_API_URL=.*|OMI_API_URL=http://localhost:8080|' "/Applications/Vibe AI Dev.app/Contents/Resources/.env"
+open "/Applications/Vibe AI Dev.app"
+
+# Manual server starts if app didn't auto-start them:
+python3 ~/Library/Application\ Support/VoiceAI/mlx_whisper_server.py &   # STT 8787
+python3 ~/Library/Application\ Support/VoiceAI/kokoro_tts_server.py &    # TTS 8788
+```
 
 ## Logs & Debugging
 
@@ -30,7 +84,7 @@ When debugging issues for a specific user (crashes, errors, behavior), use the *
 See `.claude/skills/user-logs/SKILL.md` for full documentation and API queries.
 
 ## Repository
-- This is the `desktop/` subfolder of the **OMI monorepo** (`BasedHardware/omi`)
+- This is the `desktop/` subfolder of the **Vibe AI monorepo** (`BasedHardware/omi`)
 - macOS Swift app + Rust backend live here
 
 ## Release Pipeline
@@ -114,15 +168,15 @@ See `.claude/settings.json` for connection details.
 - **Build only**: `./build.sh` — release build without running
 - **DO NOT** use bare `swift build` — it will fail with SDK version mismatch
 - **DO NOT** use `xcodebuild` — there is no `.xcodeproj`
-- **DO NOT** launch the app directly from `build/` — always use `./run.sh` or `./reset-and-run.sh`. These scripts install to `/Applications/Omi Dev.app` and launch from there, which is required for macOS "Quit & Reopen" (after granting permissions) to find the correct binary. Launching from `build/` causes stale binaries to run after permission restarts.
+- **DO NOT** launch the app directly from `build/` — always use `./run.sh` or `./reset-and-run.sh`. These scripts install to `/Applications/Vibe AI Dev.app` and launch from there, which is required for macOS "Quit & Reopen" (after granting permissions) to find the correct binary. Launching from `build/` causes stale binaries to run after permission restarts.
 - **DO NOT** manually copy binaries into app bundles and launch them — this bypasses signing, `/Applications/` installation, and LaunchServices registration
 
 ### App Names & Build Artifacts
-- `./run.sh` builds **"Omi Dev"** → installs to `/Applications/Omi Dev.app` (bundle ID: `com.omi.desktop-dev`)
-- `./build.sh` builds **"Omi Beta"** → `build/Omi Beta.app` (bundle ID: `com.omi.computer-macos`)
+- `./run.sh` builds **"Vibe AI Dev"** → installs to `/Applications/Vibe AI Dev.app` (bundle ID: `com.vibeaiglobal.vibeai-dev`)
+- `./build.sh` builds **"Vibe AI"** → `build/Vibe AI.app` (bundle ID: `com.vibeaiglobal.vibeai`)
 - Different bundle IDs, different app names, but same source code
 - When updating resources (icons, assets, etc.) in built app bundles, update BOTH
-- To check which app is currently running: `ps aux | grep "Omi"`
+- To check which app is currently running: `ps aux | grep "Vibe AI"`
 
 ### After Implementing Changes
 - **By default**, do NOT build or run the app — let the user test manually with `./run.sh`
